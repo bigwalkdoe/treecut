@@ -146,7 +146,7 @@ fn extract_python_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>)
             if let (Some(n), Some(a)) = (name_node, alias_node) {
                 let name_text = source[n.byte_range()].to_string();
                 let alias_text = source[a.byte_range()].to_string();
-                let original = name_text.split('.').last().unwrap_or(&name_text).to_string();
+                let original = name_text.split('.').rev().next().unwrap_or(&name_text).to_string();
                 // Try to get module from parent
                 let source_module = if node.kind() == "import_from_statement" {
                     node.child_by_field_name("module_name")
@@ -170,7 +170,7 @@ fn extract_python_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>)
                     if let (Some(n), Some(a)) = (name_node, alias_node) {
                         let name_text = source[n.byte_range()].to_string();
                         let alias_text = source[a.byte_range()].to_string();
-                        let original = name_text.split('.').last().unwrap_or(&name_text).to_string();
+                        let original = name_text.split('.').rev().next().unwrap_or(&name_text).to_string();
                         out.push(ImportAlias {
                             original,
                             alias: alias_text,
@@ -190,7 +190,7 @@ fn extract_ts_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {
     fn visit_import_specifier(node: &Node, source: &str, source_module: Option<String>, out: &mut Vec<ImportAlias>) {
         if node.kind() == "import_specifier" {
             let mut spec_cursor = node.walk();
-            let mut children: Vec<Node> = node.children(&mut spec_cursor).collect();
+            let children: Vec<Node> = node.children(&mut spec_cursor).collect();
             if children.len() >= 3 && children[1].kind() == "as" {
                 let name_text = source[children[0].byte_range()].to_string();
                 let alias_text = source[children[2].byte_range()].to_string();
@@ -227,7 +227,7 @@ fn extract_go_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {
         if child.kind() == "import_spec" {
             // Check for alias (identifier before path)
             let mut spec_cursor = child.walk();
-            let mut children: Vec<Node> = child.children(&mut spec_cursor).collect();
+            let children: Vec<Node> = child.children(&mut spec_cursor).collect();
             if children.len() >= 2 {
                 // First might be alias, last is path
                 let path_node = children.last().unwrap();
@@ -236,7 +236,7 @@ fn extract_go_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {
                 let alias_text = source[alias_node.byte_range()].to_string();
                 if alias_text != path_text && !path_text.contains(&alias_text) {
                     // This is an aliased import
-                    let original = path_text.split('/').last().unwrap_or(&path_text).to_string();
+                    let original = path_text.split('/').rev().next().unwrap_or(&path_text).to_string();
                     out.push(ImportAlias {
                         original,
                         alias: alias_text,
@@ -258,7 +258,7 @@ fn extract_csharp_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>)
             let alias_text = source[a.byte_range()].to_string();
             let target_text = source[t.byte_range()].to_string();
             // Get last segment as original
-            let original = target_text.split('.').last().unwrap_or(&target_text).to_string();
+            let original = target_text.split('.').rev().next().unwrap_or(&target_text).to_string();
             out.push(ImportAlias {
                 original,
                 alias: alias_text,

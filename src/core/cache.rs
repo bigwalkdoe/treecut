@@ -2,6 +2,16 @@ use anyhow::Result;
 use rusqlite::{Connection, params};
 use std::path::Path;
 
+pub struct CacheEntry {
+    pub rel: String,
+    pub mtime_ns: i64,
+    pub byte_len: i64,
+    pub language: String,
+    pub skeleton: String,
+    pub symbols_json: String,
+    pub imports_json: String,
+}
+
 pub struct Cache {
     conn: Connection,
 }
@@ -53,10 +63,13 @@ impl Cache {
         }
     }
 
-    pub fn put(&self, rel: &str, mtime_ns: i64, byte_len: i64, language: &str, skeleton: &str, symbols_json: &str, imports_json: &str) -> Result<()> {
+    pub fn put(&self, entry: &CacheEntry) -> Result<()> {
         self.conn.execute(
             "INSERT OR REPLACE INTO file_index (rel_path, mtime_ns, byte_len, language, skeleton_text, symbols_json, imports_json, schema_version) VALUES (?1,?2,?3,?4,?5,?6,?7,2)",
-            params![rel, mtime_ns, byte_len, language, skeleton, symbols_json, imports_json],
+            params![
+                entry.rel, entry.mtime_ns, entry.byte_len, entry.language,
+                entry.skeleton, entry.symbols_json, entry.imports_json
+            ],
         )?;
         Ok(())
     }
@@ -64,8 +77,9 @@ impl Cache {
     pub fn prune(&self, existing: &[String]) -> Result<()> {
         let mut stmt = self.conn.prepare("SELECT rel_path FROM file_index")?;
         let rows: Vec<String> = stmt.query_map([], |r| r.get(0))?.filter_map(|r| r.ok()).collect();
+        let existing_set: std::collections::HashSet<_> = existing.iter().collect();
         for r in rows {
-            if !existing.contains(&r) {
+            if !existing_set.contains(&r) {
                 self.conn.execute("DELETE FROM file_index WHERE rel_path=?1", params![r])?;
             }
         }

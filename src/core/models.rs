@@ -11,6 +11,8 @@ pub struct RepoSkeletonArgs {
     pub max_chars: Option<usize>,
     #[serde(default)]
     pub no_cache: Option<bool>,
+    #[serde(default)]
+    pub stats: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
@@ -38,6 +40,21 @@ pub struct SliceSymbolArgs {
     pub context_lines: Option<usize>,
     #[serde(default)]
     pub max_chars: Option<usize>,
+    #[serde(default)]
+    pub stats: Option<bool>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
+pub struct SliceSymbolsArgs {
+    #[serde(default)]
+    pub root: Option<String>,
+    pub symbols: Vec<String>,
+    #[serde(default)]
+    pub context_lines: Option<usize>,
+    #[serde(default)]
+    pub max_chars: Option<usize>,
+    #[serde(default)]
+    pub stats: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
@@ -50,6 +67,8 @@ pub struct SliceChangedArgs {
     pub include_callers: Option<bool>,
     #[serde(default)]
     pub max_chars: Option<usize>,
+    #[serde(default)]
+    pub stats: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
@@ -68,7 +87,19 @@ pub struct SymbolInfo {
     pub end_line: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
+pub struct SliceStats {
+    pub files_scanned: usize,
+    pub files_matched: usize,
+    pub full_files_bytes: usize,
+    pub sliced_bytes: usize,
+    pub estimated_tokens_saved: usize,
+    pub reduction_percent: f32,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolOutput {
     pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stats: Option<SliceStats>,
 }

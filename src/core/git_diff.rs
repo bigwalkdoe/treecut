@@ -1,6 +1,6 @@
-use crate::core::models::{SliceChangedArgs, SliceSymbolArgs, ToolOutput};
+use crate::core::models::{SliceChangedArgs, SliceSymbolsArgs, ToolOutput, SliceStats};
 use crate::core::parser::parse_file;
-use crate::core::slicer::slice_symbol;
+use crate::core::slicer::slice_symbols;
 use crate::core::walker::language_for;
 use anyhow::Result;
 use git2::Repository;
@@ -11,6 +11,7 @@ pub fn slice_changed_symbols(args: &SliceChangedArgs) -> Result<ToolOutput> {
     let root_path = Path::new(&root);
     let include_callers = args.include_callers.unwrap_or(true);
     let max_chars = args.max_chars.unwrap_or(16000);
+    let track_stats = args.stats.unwrap_or(false);
     let repo = Repository::discover(root_path)?;
     // diff
     let (old_tree, new_tree) = if let Some(base) = &args.base_ref {
@@ -71,21 +72,52 @@ pub fn slice_changed_symbols(args: &SliceChangedArgs) -> Result<ToolOutput> {
             }
         }
     }
+    
     let mut out = String::new();
+    let mut total_files_scanned = 0;
+    let mut total_files_matched = 0;
+    let mut total_full_bytes = 0;
+    let mut total_sliced_bytes = 0;
+    
     for sym in &modified_symbols {
         out.push_str(&format!("=== Modified symbol: {} ===\n", sym));
-        let r = slice_symbol(&SliceSymbolArgs {
+        let r = slice_symbols(&SliceSymbolsArgs {
             root: Some(root.clone()),
-            symbol: sym.clone(),
+            symbols: vec![sym.clone()],
             context_lines: Some(2),
             max_chars: Some(max_chars),
+            stats: Some(track_stats),
         })?;
         out.push_str(&r.text);
         out.push('\n');
-        if include_callers {
-            // callers already included via slice_symbol cross-file? our slice_symbol only defs+context; add note
+        
+        if track_stats {
+            if let Some(stats) = r.stats {
+                total_files_scanned += stats.files_scanned;
+                total_files_matched += stats.files_matched;
+                total_full_bytes += stats.full_files_bytes;
+                total_sliced_bytes += stats.sliced_bytes;
+            }
         }
     }
     if out.len() > max_chars { out.truncate(max_chars); out.push_str("\n...[truncated]"); }
-    Ok(ToolOutput { text: out })
+    
+    let stats = if track_stats {
+        let full = total_full_bytes.max(1);
+        let saved = full.saturating_sub(total_sliced_bytes);
+        let reduction = (saved as f32 / full as f32) * 100.0;
+        let estimated_tokens = saved / 4;
+        Some(SliceStats {
+            files_scanned: total_files_scanned,
+            files_matched: total_files_matched,
+            full_files_bytes: total_full_bytes,
+            sliced_bytes: total_sliced_bytes,
+            estimated_tokens_saved: estimated_tokens,
+            reduction_percent: reduction,
+        })
+    } else {
+        None
+    };
+    
+    Ok(ToolOutput { text: out, stats })
 }
