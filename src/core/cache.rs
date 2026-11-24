@@ -1,10 +1,9 @@
 use anyhow::Result;
 use rusqlite::{Connection, params};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub struct Cache {
     conn: Connection,
-    root: PathBuf,
 }
 
 impl Cache {
@@ -28,7 +27,7 @@ impl Cache {
             )",
             [],
         )?;
-        Ok(Self { conn, root: root.to_path_buf() })
+        Ok(Self { conn })
     }
 
     pub fn get(&self, rel: &str, mtime_ns: i64, byte_len: i64) -> Option<(String, String)> {
