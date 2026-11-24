@@ -18,6 +18,10 @@ Stop dumping 1,500-line files into your LLM's context window.<br/>
 
 </div>
 
+<div align="center">
+  <img src="assets/demo.gif" alt="treecut CLI & AST slicing demo" width="850" />
+</div>
+
 ---
 
 ## Why `treecut`?
