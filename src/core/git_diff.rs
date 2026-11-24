@@ -9,7 +9,7 @@ use std::path::Path;
 pub fn slice_changed_symbols(args: &SliceChangedArgs) -> Result<ToolOutput> {
     let root = args.root.clone().unwrap_or_else(|| ".".to_string());
     let root_path = Path::new(&root);
-    let include_callers = args.include_callers.unwrap_or(true);
+    let _ = args.include_callers; // TODO: implement caller inclusion
     let max_chars = args.max_chars.unwrap_or(16000);
     let track_stats = args.stats.unwrap_or(false);
     let repo = Repository::discover(root_path)?;
@@ -66,7 +66,7 @@ pub fn slice_changed_symbols(args: &SliceChangedArgs) -> Result<ToolOutput> {
         let syms = parse_file(&full, &source);
         for s in &syms {
             for (a, b) in ranges {
-                if s.start_line <= *b && s.end_line >= *a && !modified_symbols.contains(&s.name) {
+                if s.start_line <= *b && s.end_line >= *a && !modified_symbols.iter().any(|n| n == &s.name) {
                     modified_symbols.push(s.name.clone());
                 }
             }

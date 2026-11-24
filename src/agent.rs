@@ -13,6 +13,7 @@ pub async fn run_ask(prompt: &str, path: &str, model: &str, base_url: &str) {
             "tools": [
                 {"type":"function","function":{"name":"repo_skeleton","parameters":{"type":"object","properties":{"root":{"type":"string"}}}}},
                 {"type":"function","function":{"name":"slice_symbol","parameters":{"type":"object","properties":{"root":{"type":"string"},"symbol":{"type":"string"}},"required":["symbol"]}}},
+                {"type":"function","function":{"name":"slice_symbols","parameters":{"type":"object","properties":{"root":{"type":"string"},"symbols":{"type":"array","items":{"type":"string"}}},"required":["symbols"]}}},
                 {"type":"function","function":{"name":"slice_changed_symbols","parameters":{"type":"object","properties":{"root":{"type":"string"}}}}},
                 {"type":"function","function":{"name":"read_node","parameters":{"type":"object","properties":{"path":{"type":"string"},"start_line":{"type":"integer"},"end_line":{"type":"integer"}},"required":["path","start_line","end_line"]}}}
             ]
@@ -79,6 +80,19 @@ fn execute_tool(name: &str, args: &Value, default_root: &str) -> String {
                 ..Default::default()
             };
             core::slice_symbol(&a).map(|r| r.text).unwrap_or_default()
+        }
+        "slice_symbols" => {
+            let symbols = args
+                .get("symbols")
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str()).map(|s| s.to_string()).collect())
+                .unwrap_or_default();
+            let a = core::SliceSymbolsArgs {
+                root: Some(root),
+                symbols,
+                ..Default::default()
+            };
+            core::slice_symbols(&a).map(|r| r.text).unwrap_or_default()
         }
         "slice_changed_symbols" => {
             let a = core::SliceChangedArgs {
