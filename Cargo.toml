@@ -5,8 +5,8 @@ edition = "2024"
 description = "Local-first AST, SQLite-cached, and Git-diff context slicer for AI coding agents"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/bigwalkdoe/treecut"
-keywords = ["ast","mcp","slicer","tree-sitter"]
-categories = ["development-tools","command-line-utilities"]
+keywords = ["mcp", "tree-sitter", "ast", "cli", "ai"]
+categories = ["command-line-utilities", "development-tools"]
 
 [features]
 default = ["cli", "mcp"]

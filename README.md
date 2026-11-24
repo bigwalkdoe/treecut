@@ -58,6 +58,28 @@ treecut diff-slice . --base HEAD~1
 treecut mcp
 ```
 
+### MCP config
+
+OpenCode (`opencode.json`):
+
+```json
+{
+  "mcpServers": {
+    "treecut": { "command": "treecut", "args": ["mcp"] }
+  }
+}
+```
+
+Claude Code:
+
+```json
+{
+  "mcpServers": {
+    "treecut": { "command": "treecut", "args": ["mcp"] }
+  }
+}
+```
+
 ## 🔧 MCP tools
 
 | Tool | Description |
