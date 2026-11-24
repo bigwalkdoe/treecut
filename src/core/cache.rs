@@ -23,29 +23,40 @@ impl Cache {
                 byte_len INTEGER NOT NULL,
                 language TEXT NOT NULL,
                 skeleton_text TEXT NOT NULL,
-                symbols_json TEXT NOT NULL
+                symbols_json TEXT NOT NULL,
+                imports_json TEXT NOT NULL DEFAULT '[]',
+                schema_version INTEGER NOT NULL DEFAULT 2
             )",
             [],
         )?;
+        // Migration: add imports_json column if it doesn't exist (for v0.1.0 caches)
+        let _ = conn.execute(
+            "ALTER TABLE file_index ADD COLUMN imports_json TEXT NOT NULL DEFAULT '[]'",
+            [],
+        );
+        let _ = conn.execute(
+            "ALTER TABLE file_index ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 2",
+            [],
+        );
         Ok(Self { conn })
     }
 
-    pub fn get(&self, rel: &str, mtime_ns: i64, byte_len: i64) -> Option<(String, String)> {
-        let mut stmt = self.conn.prepare("SELECT mtime_ns, byte_len, skeleton_text, symbols_json FROM file_index WHERE rel_path=?1").ok()?;
+    pub fn get(&self, rel: &str, mtime_ns: i64, byte_len: i64) -> Option<(String, String, String)> {
+        let mut stmt = self.conn.prepare("SELECT mtime_ns, byte_len, skeleton_text, symbols_json, imports_json FROM file_index WHERE rel_path=?1").ok()?;
         let row = stmt.query_row(params![rel], |r| {
-            Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?, r.get::<_, String>(2)?, r.get::<_, String>(3)?))
+            Ok((r.get::<_, i64>(0)?, r.get::<_, i64>(1)?, r.get::<_, String>(2)?, r.get::<_, String>(3)?, r.get::<_, String>(4)?))
         }).ok()?;
         if row.0 == mtime_ns && row.1 == byte_len {
-            Some((row.2, row.3))
+            Some((row.2, row.3, row.4))
         } else {
             None
         }
     }
 
-    pub fn put(&self, rel: &str, mtime_ns: i64, byte_len: i64, language: &str, skeleton: &str, symbols_json: &str) -> Result<()> {
+    pub fn put(&self, rel: &str, mtime_ns: i64, byte_len: i64, language: &str, skeleton: &str, symbols_json: &str, imports_json: &str) -> Result<()> {
         self.conn.execute(
-            "INSERT OR REPLACE INTO file_index (rel_path, mtime_ns, byte_len, language, skeleton_text, symbols_json) VALUES (?1,?2,?3,?4,?5,?6)",
-            params![rel, mtime_ns, byte_len, language, skeleton, symbols_json],
+            "INSERT OR REPLACE INTO file_index (rel_path, mtime_ns, byte_len, language, skeleton_text, symbols_json, imports_json, schema_version) VALUES (?1,?2,?3,?4,?5,?6,?7,2)",
+            params![rel, mtime_ns, byte_len, language, skeleton, symbols_json, imports_json],
         )?;
         Ok(())
     }
