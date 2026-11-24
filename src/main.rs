@@ -12,9 +12,28 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Mcp,
-    Map { path: Option<String> },
-    Slice { symbol: String, path: Option<String> },
-    DiffSlice { path: Option<String> },
+    Map {
+        path: Option<String>,
+        #[arg(long)]
+        depth: Option<usize>,
+        #[arg(long)]
+        max_chars: Option<usize>,
+    },
+    Slice {
+        symbol: String,
+        path: Option<String>,
+        #[arg(long)]
+        max_chars: Option<usize>,
+        #[arg(long)]
+        context_lines: Option<usize>,
+    },
+    DiffSlice {
+        path: Option<String>,
+        #[arg(long)]
+        max_chars: Option<usize>,
+        #[arg(long)]
+        base: Option<String>,
+    },
     Ask { prompt: String },
 }
 
@@ -24,18 +43,18 @@ async fn main() {
     let cli = Cli::parse();
     match cli.command {
         Commands::Mcp => treecut::mcp::run().await,
-        Commands::Map { path } => {
-            let args = core::RepoSkeletonArgs { root: path, ..Default::default() };
+        Commands::Map { path, depth, max_chars } => {
+            let args = core::RepoSkeletonArgs { root: path, max_depth: depth, max_chars, ..Default::default() };
             let r = core::repo_skeleton(&args).unwrap();
             println!("{}", r.text);
         }
-        Commands::Slice { symbol, path } => {
-            let args = core::SliceSymbolArgs { root: path, symbol, ..Default::default() };
+        Commands::Slice { symbol, path, max_chars, context_lines } => {
+            let args = core::SliceSymbolArgs { root: path, symbol, max_chars, context_lines, ..Default::default() };
             let r = core::slice_symbol(&args).unwrap();
             println!("{}", r.text);
         }
-        Commands::DiffSlice { path } => {
-            let args = core::SliceChangedArgs { root: path, ..Default::default() };
+        Commands::DiffSlice { path, max_chars, base } => {
+            let args = core::SliceChangedArgs { root: path, max_chars, base_ref: base, ..Default::default() };
             let r = core::slice_changed_symbols(&args).unwrap();
             println!("{}", r.text);
         }

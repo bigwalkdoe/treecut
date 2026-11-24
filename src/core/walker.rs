@@ -23,6 +23,13 @@ pub fn language_for(path: &Path) -> Option<&'static str> {
         "java" => Some("java"),
         "c" | "h" => Some("c"),
         "cpp" | "hpp" | "cc" | "cxx" => Some("cpp"),
+        // New Tier-2 languages
+        "js" | "jsx" | "mjs" | "cjs" => Some("javascript"),
+        "cs" => Some("csharp"),
+        "rb" | "rake" => Some("ruby"),
+        "php" => Some("php"),
+        "swift" => Some("swift"),
+        "sh" | "bash" => Some("bash"),
         _ => None,
     }
 }

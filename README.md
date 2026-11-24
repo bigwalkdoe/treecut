@@ -7,7 +7,7 @@
 [![Crates.io](https://img.shields.io/crates/v/treecut.svg)](https://crates.io/crates/treecut)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
 [![Built With Rust](https://img.shields.io/badge/built_with-Rust-CE422B.svg)](https://rust-lang.org)
-[![Tree-sitter](https://img.shields.io/badge/tree--sitter-6_languages-2ea44f.svg)](https://tree-sitter.github.io)
+[![Tree-sitter](https://img.shields.io/badge/tree--sitter-12_languages-2ea44f.svg)](https://tree-sitter.github.io)
 [![MCP Compatible](https://img.shields.io/badge/MCP-compatible-8A2BE2.svg)](https://modelcontextprotocol.io)
 [![SQLite Cached](https://img.shields.io/badge/cache-SQLite_mtime-003B57.svg)](https://sqlite.org)
 
@@ -32,7 +32,7 @@ AI coding agents lose accuracy and burn tokens when forced to `grep` blindly or 
 * **Git-Diff Blast Radius (`slice_changed_symbols`)**: Intersects `git diff` hunks with parsed AST spans to isolate modified symbols and automatically pull in their callers.
 * **Compressed Repo Maps (`repo_skeleton`)**: Generates token-budgeted architectural outlines with function bodies stripped out.
 * **Incremental SQLite `mtime` Cache**: Indexes unchanged files in `.treecut/cache.db` so repeated slices across large repositories run in single-digit milliseconds.
-* **6 Languages Out of the Box**: Native `tree-sitter` support for **Rust**, **Python**, **TypeScript / TSX**, **Go**, **Java**, and **C / C++**.
+* **12 Languages Out of the Box**: Native `tree-sitter` support for **Rust**, **Python**, **TypeScript / TSX**, **Go**, **Java**, **C / C++**, **JavaScript / JSX**, **C#**, **Ruby**, **PHP**, **Swift**, and **Bash / Shell**.
 * **Dual-Mode Binary**: Runs as a headless `stdio` **MCP Server** inside your editor or as a standalone **Agentic CLI** in your terminal.
 
 ---
@@ -175,7 +175,7 @@ LLM_API_KEY="sk-or-..." treecut ask \
                               ▼
 ┌──────────────────────────────────────────────────────────┐
 │                     Pure Core Engine                     │
-│  • ignore Walker      • Tree-sitter (6 Languages)        │
+│  • ignore Walker      • Tree-sitter (12 Languages)       │
 │  • git2 Diff Mapper   • SQLite mtime Cache (.treecut/)   │
 └──────────────────────────────────────────────────────────┘
 ```

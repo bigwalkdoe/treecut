@@ -58,3 +58,107 @@ fn jsonrpc_stdio_handshake() {
     assert!(stdout.contains("slice_changed_symbols"));
     assert!(stdout.contains("read_node"));
 }
+
+// New Tier-2 language tests
+
+fn fixture_path(lang: &str, file: &str) -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(lang)
+        .join(file)
+}
+
+#[test]
+fn repo_skeleton_javascript() {
+    let path = fixture_path("javascript", "main.js");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let symbols = core::parser::parse_file(&path, &source);
+    let skeleton = core::parser::skeleton_text(&path, &source, &symbols);
+    assert!(skeleton.contains("greet"));
+    assert!(skeleton.contains("Animal"));
+    assert!(skeleton.contains("arrowFn"));
+}
+
+#[test]
+fn repo_skeleton_csharp() {
+    let path = fixture_path("csharp", "Main.cs");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let symbols = core::parser::parse_file(&path, &source);
+    let skeleton = core::parser::skeleton_text(&path, &source, &symbols);
+    assert!(skeleton.contains("Animal"));
+    assert!(skeleton.contains("IShape"));
+    assert!(skeleton.contains("Point"));
+    assert!(skeleton.contains("Color"));
+    assert!(skeleton.contains("Person"));
+    assert!(skeleton.contains("Add"));
+}
+
+#[test]
+fn repo_skeleton_ruby() {
+    let path = fixture_path("ruby", "main.rb");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let symbols = core::parser::parse_file(&path, &source);
+    let skeleton = core::parser::skeleton_text(&path, &source, &symbols);
+    assert!(skeleton.contains("greet"));
+    assert!(skeleton.contains("Animal"));
+    assert!(skeleton.contains("Walkable"));
+    assert!(skeleton.contains("Person"));
+}
+
+#[test]
+fn repo_skeleton_php() {
+    let path = fixture_path("php", "main.php");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let symbols = core::parser::parse_file(&path, &source);
+    let skeleton = core::parser::skeleton_text(&path, &source, &symbols);
+    assert!(skeleton.contains("greet"));
+    assert!(skeleton.contains("Animal"));
+    assert!(skeleton.contains("Shape"));
+    assert!(skeleton.contains("Walkable"));
+    assert!(skeleton.contains("Status"));
+}
+
+#[test]
+fn repo_skeleton_swift() {
+    let path = fixture_path("swift", "main.swift");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let symbols = core::parser::parse_file(&path, &source);
+    let skeleton = core::parser::skeleton_text(&path, &source, &symbols);
+    assert!(skeleton.contains("greet"));
+    assert!(skeleton.contains("Animal"));
+    assert!(skeleton.contains("Point"));
+    assert!(skeleton.contains("Shape"));
+    assert!(skeleton.contains("Color"));
+}
+
+#[test]
+fn repo_skeleton_bash() {
+    let path = fixture_path("bash", "main.sh");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let symbols = core::parser::parse_file(&path, &source);
+    let skeleton = core::parser::skeleton_text(&path, &source, &symbols);
+    assert!(skeleton.contains("greet"));
+    assert!(skeleton.contains("main"));
+}
+
+#[test]
+fn slice_symbol_javascript() {
+    let path = fixture_path("javascript", "main.js");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let symbols = core::parser::parse_file(&path, &source);
+    let greet = symbols.iter().find(|s| s.name == "greet").unwrap();
+    let args = core::SliceSymbolArgs { root: Some(path.parent().unwrap().to_str().unwrap().to_string()), symbol: greet.name.clone(), ..Default::default() };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    assert!(result.text.contains("greet"));
+}
+
+#[test]
+fn slice_symbol_csharp() {
+    let path = fixture_path("csharp", "Main.cs");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let symbols = core::parser::parse_file(&path, &source);
+    let animal = symbols.iter().find(|s| s.name == "Animal").unwrap();
+    let args = core::SliceSymbolArgs { root: Some(path.parent().unwrap().to_str().unwrap().to_string()), symbol: animal.name.clone(), ..Default::default() };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    assert!(result.text.contains("Animal"));
+}

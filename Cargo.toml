@@ -1,6 +1,6 @@
 [package]
 name = "treecut"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "Local-first AST, SQLite-cached, and Git-diff context slicer for AI coding agents"
 license = "MIT OR Apache-2.0"
@@ -18,9 +18,17 @@ keywords = ["mcp", "tree-sitter", "ast", "cli", "ai"]
 categories = ["command-line-utilities", "development-tools"]
 
 [features]
-default = ["cli", "mcp"]
+default = ["cli", "mcp", "extra-langs"]
 cli = ["dep:reqwest"]
-mcp = []
+mcp = ["dep:rmcp"]
+extra-langs = [
+    "dep:tree-sitter-javascript",
+    "dep:tree-sitter-c-sharp",
+    "dep:tree-sitter-ruby",
+    "dep:tree-sitter-php",
+    "dep:tree-sitter-swift",
+    "dep:tree-sitter-bash",
+]
 
 [dependencies]
 anyhow = "1.0"
@@ -44,7 +52,16 @@ tree-sitter-java = "0.23"
 tree-sitter-c = "0.23"
 tree-sitter-cpp = "0.23"
 
+# New Tier-2 grammars (12 languages total)
+tree-sitter-javascript = { version = "0.23", optional = true }
+tree-sitter-c-sharp = { version = "0.23.5", optional = true }
+tree-sitter-ruby = { version = "0.23", optional = true }
+tree-sitter-php = { version = "0.23", optional = true }
+tree-sitter-swift = { version = "0.7", optional = true }
+tree-sitter-bash = { version = "0.23", optional = true }
+
 reqwest = { version = "0.13", features = ["json"], optional = true }
+rmcp = { version = "0.1", optional = true }
 
 [dev-dependencies]
 tempfile = "3.15"
