@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, Arg};
 use tracing_subscriber::fmt;
 use treecut::core;
 
@@ -18,14 +18,20 @@ enum Commands {
         depth: Option<usize>,
         #[arg(long)]
         max_chars: Option<usize>,
+        #[arg(long)]
+        stats: bool,
     },
     Slice {
-        symbol: String,
+        #[arg(required = true, num_args = 1..)]
+        symbols: Vec<String>,
+        #[arg(long)]
         path: Option<String>,
         #[arg(long)]
         max_chars: Option<usize>,
         #[arg(long)]
         context_lines: Option<usize>,
+        #[arg(long)]
+        stats: bool,
     },
     DiffSlice {
         path: Option<String>,
@@ -33,6 +39,8 @@ enum Commands {
         max_chars: Option<usize>,
         #[arg(long)]
         base: Option<String>,
+        #[arg(long)]
+        stats: bool,
     },
     Ask { prompt: String },
 }
@@ -43,20 +51,46 @@ async fn main() {
     let cli = Cli::parse();
     match cli.command {
         Commands::Mcp => treecut::mcp::run().await,
-        Commands::Map { path, depth, max_chars } => {
-            let args = core::RepoSkeletonArgs { root: path, max_depth: depth, max_chars, ..Default::default() };
+        Commands::Map { path, depth, max_chars, stats } => {
+            let args = core::RepoSkeletonArgs { root: path, max_depth: depth, max_chars, stats: Some(stats), ..Default::default() };
             let r = core::repo_skeleton(&args).unwrap();
             println!("{}", r.text);
+            if stats {
+                if let Some(s) = r.stats {
+                    print_stats(&s);
+                }
+            }
         }
-        Commands::Slice { symbol, path, max_chars, context_lines } => {
-            let args = core::SliceSymbolArgs { root: path, symbol, max_chars, context_lines, ..Default::default() };
-            let r = core::slice_symbol(&args).unwrap();
-            println!("{}", r.text);
+        Commands::Slice { symbols, path, max_chars, context_lines, stats } => {
+            if symbols.len() == 1 {
+                let args = core::SliceSymbolArgs { root: path, symbol: symbols[0].clone(), max_chars, context_lines, stats: Some(stats), ..Default::default() };
+                let r = core::slice_symbol(&args).unwrap();
+                println!("{}", r.text);
+                if stats {
+                    if let Some(s) = r.stats {
+                        print_stats(&s);
+                    }
+                }
+            } else {
+                let args = core::SliceSymbolsArgs { root: path, symbols, max_chars, context_lines, stats: Some(stats), ..Default::default() };
+                let r = core::slice_symbols(&args).unwrap();
+                println!("{}", r.text);
+                if stats {
+                    if let Some(s) = r.stats {
+                        print_stats(&s);
+                    }
+                }
+            }
         }
-        Commands::DiffSlice { path, max_chars, base } => {
-            let args = core::SliceChangedArgs { root: path, max_chars, base_ref: base, ..Default::default() };
+        Commands::DiffSlice { path, max_chars, base, stats } => {
+            let args = core::SliceChangedArgs { root: path, max_chars, base_ref: base, stats: Some(stats), ..Default::default() };
             let r = core::slice_changed_symbols(&args).unwrap();
             println!("{}", r.text);
+            if stats {
+                if let Some(s) = r.stats {
+                    print_stats(&s);
+                }
+            }
         }
         Commands::Ask { prompt } => {
             #[cfg(feature = "cli")]
@@ -69,4 +103,14 @@ async fn main() {
             { let _ = prompt; eprintln!("ask requires cli feature"); }
         }
     }
+}
+
+fn print_stats(stats: &core::SliceStats) {
+    eprintln!("\n=== Slice Statistics ===");
+    eprintln!("Files scanned:       {}", stats.files_scanned);
+    eprintln!("Files matched:       {}", stats.files_matched);
+    eprintln!("Full files (bytes):  {}", stats.full_files_bytes);
+    eprintln!("Sliced output (bytes): {}", stats.sliced_bytes);
+    eprintln!("Est. tokens saved:   {}", stats.estimated_tokens_saved);
+    eprintln!("Reduction:           {:.1}%", stats.reduction_percent);
 }

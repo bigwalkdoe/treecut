@@ -71,7 +71,7 @@ pub fn parse_file_with_imports(path: &Path, source: &str) -> ParsedFile {
 }
 
 fn collect_symbols(node: &Node, source: &str, path: &Path, kinds: &[&str], out: &mut Vec<SymbolInfo>) {
-    if kinds.contains(&node.kind()) {
+    if kinds.iter().any(|k| *k == node.kind()) {
         let name = node.child_by_field_name("name")
             .or_else(|| node.child_by_field_name("type"))
             .map(|n| source[n.byte_range()].to_string())
@@ -91,7 +91,7 @@ fn collect_symbols(node: &Node, source: &str, path: &Path, kinds: &[&str], out: 
 }
 
 fn collect_imports(node: &Node, source: &str, path: &Path, language: &str, kinds: &[&str], out: &mut Vec<ImportAlias>) {
-    if kinds.contains(&node.kind()) {
+    if kinds.iter().any(|k| *k == node.kind()) {
         extract_imports(node, source, path, language, out);
     }
     let mut cursor = node.walk();

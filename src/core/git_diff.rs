@@ -91,13 +91,11 @@ pub fn slice_changed_symbols(args: &SliceChangedArgs) -> Result<ToolOutput> {
         out.push_str(&r.text);
         out.push('\n');
         
-        if track_stats {
-            if let Some(stats) = r.stats {
-                total_files_scanned += stats.files_scanned;
-                total_files_matched += stats.files_matched;
-                total_full_bytes += stats.full_files_bytes;
-                total_sliced_bytes += stats.sliced_bytes;
-            }
+        if let Some(stats) = r.stats.filter(|_| track_stats) {
+            total_files_scanned += stats.files_scanned;
+            total_files_matched += stats.files_matched;
+            total_full_bytes += stats.full_files_bytes;
+            total_sliced_bytes += stats.sliced_bytes;
         }
     }
     if out.len() > max_chars { out.truncate(max_chars); out.push_str("\n...[truncated]"); }

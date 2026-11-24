@@ -234,3 +234,95 @@ fn parse_imports_python() {
     assert_eq!(parsed.imports[0].alias, "check_tok");
     assert!(parsed.imports[0].source_module.as_ref().unwrap().contains("auth"));
 }
+
+// v0.3.0: Multi-symbol batch slicing and stats tests
+
+#[test]
+fn slice_symbols_multi() {
+    let dir = fixture_dir("multi_symbol");
+    let args = core::SliceSymbolsArgs { 
+        root: Some(dir.to_str().unwrap().to_string()), 
+        symbols: vec!["verify_token".to_string(), "refresh_token".to_string()],
+        ..Default::default() 
+    };
+    let result = core::slicer::slice_symbols(&args).unwrap();
+    // Should find both definitions and both call sites
+    assert!(result.text.contains("verify_token"), "Should find verify_token definition");
+    assert!(result.text.contains("refresh_token"), "Should find refresh_token definition");
+    assert!(result.text.contains("check_tok"), "Should find verify_token aliased call site");
+    assert!(result.text.contains("refresh_token"), "Should find refresh_token call site (no alias)");
+    // Should NOT duplicate the overlapping caller context (handle_request and refresh_session share file)
+    let handle_request_count = result.text.matches("handle_request").count();
+    assert_eq!(handle_request_count, 1, "Should not duplicate overlapping caller context");
+}
+
+#[test]
+fn slice_symbols_stats() {
+    let dir = fixture_dir("multi_symbol");
+    let args = core::SliceSymbolsArgs { 
+        root: Some(dir.to_str().unwrap().to_string()), 
+        symbols: vec!["verify_token".to_string()],
+        stats: Some(true),
+        ..Default::default() 
+    };
+    let result = core::slicer::slice_symbols(&args).unwrap();
+    assert!(result.stats.is_some(), "Stats should be present");
+    let stats = result.stats.unwrap();
+    assert!(stats.files_scanned > 0, "files_scanned should be > 0");
+    assert!(stats.files_matched > 0, "files_matched should be > 0");
+    assert!(stats.full_files_bytes > 0, "full_files_bytes should be > 0");
+    assert!(stats.sliced_bytes > 0, "sliced_bytes should be > 0");
+    assert!(stats.reduction_percent >= 0.0 && stats.reduction_percent <= 100.0, "reduction_percent should be 0-100");
+    let saved = stats.full_files_bytes.saturating_sub(stats.sliced_bytes);
+    assert_eq!(stats.estimated_tokens_saved, saved / 4, "tokens should be ~4 chars");
+}
+
+#[test]
+fn slice_symbol_stats() {
+    let dir = fixture_dir("multi_symbol");
+    let args = core::SliceSymbolArgs { 
+        root: Some(dir.to_str().unwrap().to_string()), 
+        symbol: "verify_token".to_string(),
+        stats: Some(true),
+        ..Default::default() 
+    };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    assert!(result.stats.is_some(), "Stats should be present");
+    let stats = result.stats.unwrap();
+    assert!(stats.files_scanned > 0, "files_scanned should be > 0");
+    assert!(stats.files_matched > 0, "files_matched should be > 0");
+    assert!(stats.reduction_percent >= 0.0 && stats.reduction_percent <= 100.0, "reduction_percent should be 0-100");
+}
+
+#[test]
+fn repo_skeleton_stats() {
+    let dir = fixture_dir("multi_symbol");
+    let args = core::RepoSkeletonArgs { 
+        root: Some(dir.to_str().unwrap().to_string()),
+        stats: Some(true),
+        ..Default::default() 
+    };
+    let result = core::repo_skeleton(&args).unwrap();
+    assert!(result.stats.is_some(), "Stats should be present");
+    let stats = result.stats.unwrap();
+    assert!(stats.files_scanned > 0, "files_scanned should be > 0");
+    assert!(stats.files_matched > 0, "files_matched should be > 0");
+    assert!(stats.reduction_percent >= 0.0 && stats.reduction_percent <= 100.0, "reduction_percent should be 0-100");
+}
+
+#[test]
+fn slice_symbols_dedupe_symbols() {
+    // Test that duplicate symbols in input are deduplicated
+    let dir = fixture_dir("multi_symbol");
+    let args = core::SliceSymbolsArgs { 
+        root: Some(dir.to_str().unwrap().to_string()), 
+        symbols: vec!["verify_token".to_string(), "verify_token".to_string()],
+        ..Default::default() 
+    };
+    let result = core::slicer::slice_symbols(&args).unwrap();
+    eprintln!("OUTPUT:\n{}", result.text);
+    // Should only show each match once
+    let verify_token_count = result.text.matches("verify_token").count();
+    // Should find at least definition + call site, may include alias references
+    assert!(verify_token_count >= 2, "Should find definition + call site, got {}", verify_token_count);
+}

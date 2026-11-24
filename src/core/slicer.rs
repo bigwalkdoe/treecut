@@ -6,10 +6,9 @@ use std::path::Path;
 use tree_sitter::{Parser, Node};
 
 pub fn slice_symbol(args: &SliceSymbolArgs) -> Result<ToolOutput> {
-    let mut symbols = vec![args.symbol.clone()];
     slice_symbols_internal(&SliceSymbolsArgs {
         root: args.root.clone(),
-        symbols,
+        symbols: vec![args.symbol.clone()],
         context_lines: args.context_lines,
         max_chars: args.max_chars,
         stats: args.stats,
@@ -164,7 +163,7 @@ fn find_identifier_references(node: &Node, source: &str, local_names: &[String],
     let mut refs = Vec::new();
     if node.kind() == "identifier" {
         let text = source[node.byte_range()].to_string();
-        if local_names.contains(&text) {
+        if local_names.iter().any(|n| n == &text) {
             let via_alias = if text != *target_symbol {
                 imports.iter()
                     .find(|imp| imp.alias == text && imp.original == *target_symbol)
