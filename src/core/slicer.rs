@@ -74,7 +74,7 @@ fn slice_symbols_internal(args: &SliceSymbolsArgs) -> Result<ToolOutput> {
         for s in &parsed.symbols {
             for sym in &unique_symbols {
                 let local_names = symbol_to_locals.get(sym).unwrap();
-                if local_names.iter().any(|name| s.name == *name) {
+                if local_names.contains(&s.name) {
                     let lines: Vec<&str> = source.lines().collect();
                     let start = s.start_line.saturating_sub(context_lines).max(1);
                     let end = (s.end_line + context_lines).min(lines.len());
@@ -107,8 +107,11 @@ fn slice_symbols_internal(args: &SliceSymbolsArgs) -> Result<ToolOutput> {
             for (line, via_alias) in refs {
                 let start = line.saturating_sub(context_lines).max(1);
                 let end = (line + context_lines).min(source.lines().count());
-                // Only deduplicate exact same line matches, not overlapping context
-                if !emitted_ranges.iter().any(|&(s, e)| s == start && e == end) {
+                // Deduplicate: skip if exact same context range already emitted, or if fully contained in existing range
+                let is_duplicate = emitted_ranges.iter().any(|&(s, e)| {
+                    (s == start && e == end) || (s <= start && e >= end)
+                });
+                if !is_duplicate {
                     let lines: Vec<&str> = source.lines().collect();
                     let header = format!("--- {}:{}-{} {} ---\n", p.display(), line, line, via_alias);
                     let content: String = (start..=end).map(|i| format!("{:>4}: {}\n", i, lines[i-1])).collect();
