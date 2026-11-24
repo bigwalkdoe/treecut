@@ -65,8 +65,8 @@ pub fn slice_changed_symbols(args: &SliceChangedArgs) -> Result<ToolOutput> {
         let syms = parse_file(&full, &source);
         for s in &syms {
             for (a, b) in ranges {
-                if s.start_line <= *b && s.end_line >= *a {
-                    if !modified_symbols.contains(&s.name) { modified_symbols.push(s.name.clone()); }
+                if s.start_line <= *b && s.end_line >= *a && !modified_symbols.contains(&s.name) {
+                    modified_symbols.push(s.name.clone());
                 }
             }
         }

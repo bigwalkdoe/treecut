@@ -2,15 +2,14 @@ use ignore::WalkBuilder;
 use std::path::{Path, PathBuf};
 
 pub fn walk_files(root: &Path) -> Vec<PathBuf> {
-    let mut out = Vec::new();
-    for entry in WalkBuilder::new(root).hidden(true).git_ignore(true).build() {
-        if let Ok(e) = entry {
-            if e.file_type().map(|t| t.is_file()).unwrap_or(false) {
-                out.push(e.path().to_path_buf());
-            }
-        }
-    }
-    out
+    WalkBuilder::new(root)
+        .hidden(true)
+        .git_ignore(true)
+        .build()
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().map(|t| t.is_file()).unwrap_or(false))
+        .map(|e| e.path().to_path_buf())
+        .collect()
 }
 
 pub fn language_for(path: &Path) -> Option<&'static str> {
