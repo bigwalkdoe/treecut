@@ -1,58 +1,57 @@
 # treecut
 
-**Local-first AST, SQLite-cached, and Git-diff context slicer for AI coding agents.**
+[![CI](https://github.com/bigwalkdoe/treecut/actions/workflows/ci.yml/badge.svg)](https://github.com/bigwalkdoe/treecut/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-2024-orange.svg)](Cargo.toml)
 
-`treecut` is a single Rust binary that extracts precise, dependency-aware code context for LLMs. It compiles into two modes over one shared core engine:
+**treecut is an open-source local-first AST and Git-diff context slicer for AI coding agents.**  
+It compiles into a single binary that serves both an MCP server (stdio JSON-RPC) and an agentic CLI, sharing one pure-Rust core engine.
 
-1. **MCP Server** (`treecut mcp`) — exposes tools over stdio JSON-RPC 2.0 for AI hosts (OpenCode, Cursor, Claude Code).
-2. **Agentic CLI** (`treecut ask` / `slice` / `map` / `diff-slice`) — deterministic extraction commands or a ReAct terminal agent backed by any OpenAI-compatible endpoint (Ollama, OpenRouter).
+> **Active development.** treecut v0.1.0 is under active development. Core slicing, caching, and diff flows are functional; the ReAct agent loop and additional language coverage are expanding.
 
-## Features
+## Why treecut
 
-- Multi-language AST parsing: Rust, Python, TypeScript/TSX, Go, Java, C/C++
-- Incremental SQLite cache keyed on `(mtime, size)` — skips re-parsing unchanged files
-- Git-diff impact slicing: modified symbols + blast radius (callers)
-- Gitignore-aware traversal via the `ignore` crate
-- Graceful degradation on unparseable/binary files
-- Strict stdout purity in MCP mode (logs go to stderr)
+Most AI coding tools dump entire files into context. treecut extracts only what matters:
 
-## Install
+- **Symbol-level slicing** — definitions + cross-file call sites, not whole files.
+- **Git-diff impact slicing** — modified symbols plus their blast radius (callers).
+- **Incremental SQLite cache** — keyed on `(mtime, size)` so unchanged files are never re-parsed.
+- **Gitignore-aware traversal** — respects `.gitignore`, `.ignore`, and hidden dirs.
+- **Graceful degradation** — unparseable/binary files are skipped, never crashing a scan.
+
+## What's in the box
+
+| Area | State |
+|------|-------|
+| Multi-language AST (Rust, Python, TS/TSX, Go, Java, C/C++) | ✅ |
+| SQLite mtime/size cache (`.treecut/cache.db`) | ✅ |
+| Git-diff modified symbols + callers | ✅ |
+| MCP stdio server (4 tools) | ✅ |
+| Agentic CLI (`map`, `slice`, `diff-slice`, `ask`) | ✅ |
+| ReAct tool-calling agent loop | 🚧 |
+
+## Quick start
 
 ```bash
 cargo install --path .
-```
-
-## Usage
-
-```bash
-# MCP server (stdio)
-treecut mcp
-
-# Repository skeleton
-treecut map . --depth 4 --max-chars 12000
-
-# Slice a symbol
+treecut map . --depth 4
 treecut slice my_func .
-
-# Diff-aware slice (pre-commit review)
 treecut diff-slice . --base HEAD~1
-
-# Agentic ask
-treecut ask "What does add() do?" --path .
+treecut mcp
 ```
 
-## MCP Tools
+## MCP tools
 
 | Tool | Description |
 |------|-------------|
 | `repo_skeleton` | Compressed repo map with top-level declarations and line numbers |
 | `slice_symbol` | Full definitions + cross-file call sites for a symbol |
-| `slice_changed_symbols` | Modified symbols from git diff + impacted callers |
+| `slice_changed_symbols` | Modified symbols from a git diff + impacted callers |
 | `read_node` | Read a specific line range with line numbers |
 
 ## Architecture
 
-```
+```text
 src/
 ├── main.rs          # CLI router & stderr tracing
 ├── lib.rs           # Re-exports core
@@ -64,7 +63,7 @@ src/
 │   ├── slicer.rs    # Symbol + dependency slicer
 │   ├── skeleton.rs  # Repo map generator
 │   └── git_diff.rs  # Diff -> modified symbols + blast radius
-├── mcp.rs           # rmcp stdio server
+├── mcp.rs           # stdio JSON-RPC server
 └── agent.rs         # ReAct CLI agent loop
 ```
 
