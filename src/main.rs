@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, Arg};
+use clap::{Parser, Subcommand};
 use tracing_subscriber::fmt;
 use treecut::core;
 
@@ -63,7 +63,7 @@ async fn main() {
         }
         Commands::Slice { symbols, path, max_chars, context_lines, stats } => {
             if symbols.len() == 1 {
-                let args = core::SliceSymbolArgs { root: path, symbol: symbols[0].clone(), max_chars, context_lines, stats: Some(stats), ..Default::default() };
+                let args = core::SliceSymbolArgs { root: path, symbol: symbols[0].clone(), max_chars, context_lines, stats: Some(stats) };
                 let r = core::slice_symbol(&args).unwrap();
                 println!("{}", r.text);
                 if stats {
@@ -72,7 +72,7 @@ async fn main() {
                     }
                 }
             } else {
-                let args = core::SliceSymbolsArgs { root: path, symbols, max_chars, context_lines, stats: Some(stats), ..Default::default() };
+                let args = core::SliceSymbolsArgs { root: path, symbols, max_chars, context_lines, stats: Some(stats) };
                 let r = core::slice_symbols(&args).unwrap();
                 println!("{}", r.text);
                 if stats {
@@ -83,7 +83,7 @@ async fn main() {
             }
         }
         Commands::DiffSlice { path, max_chars, base, stats } => {
-            let args = core::SliceChangedArgs { root: path, max_chars, base_ref: base, stats: Some(stats), ..Default::default() };
+            let args = core::SliceChangedArgs { root: path, max_chars, base_ref: base, stats: Some(stats) };
             let r = core::slice_changed_symbols(&args).unwrap();
             println!("{}", r.text);
             if stats {

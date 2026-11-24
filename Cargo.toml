@@ -1,6 +1,6 @@
 [package]
 name = "treecut"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 description = "Local-first AST, SQLite-cached, and Git-diff context slicer for AI coding agents"
 license = "MIT OR Apache-2.0"

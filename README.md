@@ -34,6 +34,8 @@ AI coding agents lose accuracy and burn tokens when forced to `grep` blindly or 
 * **Incremental SQLite `mtime` Cache**: Indexes unchanged files in `.treecut/cache.db` so repeated slices across large repositories run in single-digit milliseconds.
 * **12 Languages Out of the Box**: Native `tree-sitter` support for **Rust**, **Python**, **TypeScript / TSX**, **Go**, **Java**, **C / C++**, **JavaScript / JSX**, **C#**, **Ruby**, **PHP**, **Swift**, and **Bash / Shell**.
 * **Import Alias Resolution**: `slice_symbol` and `slice_changed_symbols` resolve aliased imports across files (Rust `use foo as bar`, TypeScript `import { foo as bar }`, Python `from foo import bar as baz`, Go `import bar "foo"`, C# `using Bar = Foo;`) and annotate call sites with `(via alias <name>)`.
+* **Multi-Symbol Batch Slicing (`slice_symbols`)**: Trace multiple functions, structs, or classes in a **single MCP tool call** or CLI invocation (`treecut slice SymbolA SymbolB SymbolC`). Automatically merges overlapping line spans when multiple target symbols share callers, eliminating duplicate context blocks.
+* **Token-Savings Telemetry (`--stats`)**: Every slice and skeleton operation calculates exact byte and estimated token savings compared to reading full matched files. Pass `--stats` to `treecut map`, `treecut slice`, or `treecut diff-slice` to print compression metrics to `stderr` without polluting `stdout` pipes.
 * **Dual-Mode Binary**: Runs as a headless `stdio` **MCP Server** inside your editor or as a standalone **Agentic CLI** in your terminal.
 
 ---
@@ -110,9 +112,10 @@ cargo install --path .
 
 | Tool | Purpose | Key Arguments |
 | :--- | :--- | :--- |
-| `repo_skeleton` | Compressed codebase signature map | `root`, `max_depth`, `max_chars` |
-| `slice_symbol` | Full definition + cross-file call sites | `symbol`, `root`, `context_lines`, `max_chars` |
-| `slice_changed_symbols` | Modified AST symbols in Git diff + callers | `root`, `base_ref`, `include_callers`, `max_chars` |
+| `repo_skeleton` | Compressed codebase signature map | `root`, `max_depth`, `max_chars`, `stats` |
+| `slice_symbol` | Full definition + cross-file call sites | `symbol`, `root`, `context_lines`, `max_chars`, `stats` |
+| `slice_symbols` | Batch slice multiple symbols in one call | `symbols[]`, `root`, `context_lines`, `max_chars`, `stats` |
+| `slice_changed_symbols` | Modified AST symbols in Git diff + callers | `root`, `base_ref`, `include_callers`, `max_chars`, `stats` |
 | `read_node` | Line-bounded precision source reader | `path`, `start_line`, `end_line` |
 
 ---
@@ -127,8 +130,14 @@ Use `treecut` directly in terminal pipelines, Git hooks, or standalone agentic d
 # Generate a compressed repository skeleton (up to 12k chars)
 treecut map --depth 3 --max-chars 12000
 
-# Slice a symbol's definition and all call sites across the repo
+# Slice one or more symbols' definitions and all call sites across the repo
 treecut slice verify_token
+treecut slice verify_token refresh_token handle_request
+
+# Show token-savings telemetry for any slice/map operation
+treecut slice verify_token --stats
+treecut map --depth 3 --stats
+treecut diff-slice --base main --stats
 
 # Extract only functions modified in uncommitted changes + their callers
 treecut diff-slice
