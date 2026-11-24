@@ -1,112 +1,200 @@
-<h1 align="center">TREECUT ☤</h1>
+<div align="center">
 
-<p align="center">
-  <strong>Local-first AST, SQLite-cached, and Git-diff context slicer for AI coding agents — dispatched through one binary.</strong>
-</p>
+# `treecut`
 
-<p align="center">
-  <a href="LICENSE"><img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-22c55e?style=for-the-badge"></a>
-  <a href="Cargo.toml"><img alt="Version 0.1.0" src="https://img.shields.io/badge/Version-0.1.0-0ea5e9?style=for-the-badge"></a>
-  <a href="Cargo.toml"><img alt="Rust 2024" src="https://img.shields.io/badge/Rust-2024-CE422B?style=for-the-badge&logo=rust&logoColor=white"></a>
-  <a href="https://www.rust-lang.org/"><img alt="Platform Linux" src="https://img.shields.io/badge/Platform-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=111827"></a>
-</p>
+**Precision AST & Call-Graph Context Slicing for AI Coding Agents**
 
-<p align="center">
-  <a href="https://github.com/bigwalkdoe/treecut/actions/workflows/ci.yml"><img alt="CI workflow" src="https://img.shields.io/github/actions/workflow/status/bigwalkdoe/treecut/ci.yml?branch=main&style=flat-square&label=ci"></a>
-</p>
+[![Crates.io](https://img.shields.io/crates/v/treecut.svg)](https://crates.io/crates/treecut)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+[![Built With Rust](https://img.shields.io/badge/built_with-Rust-CE422B.svg)](https://rust-lang.org)
+[![Tree-sitter](https://img.shields.io/badge/tree--sitter-6_languages-2ea44f.svg)](https://tree-sitter.github.io)
+[![MCP Compatible](https://img.shields.io/badge/MCP-compatible-8A2BE2.svg)](https://modelcontextprotocol.io)
+[![SQLite Cached](https://img.shields.io/badge/cache-SQLite_mtime-003B57.svg)](https://sqlite.org)
+
+Stop dumping 1,500-line files into your LLM's context window.<br/>
+`treecut` parses your codebase in milliseconds and extracts only the exact definitions, callers, and Git-diff blast radius your agent needs.
+
+[Quickstart](#quickstart) • [MCP Setup](#mcp-server-setup) • [CLI Usage](#cli-usage) • [Architecture](#architecture)
+
+</div>
 
 ---
 
-## Contents
+## Why `treecut`?
 
-- [▸ What treecut is](#-what-treecut-is)
-- [✦ Feature map](#-feature-map)
-- [⚡ Quick start](#-quick-start)
-- [🔧 MCP tools](#-mcp-tools)
-- [🏗 Architecture](#-architecture)
-- [📜 License](#-license)
+AI coding agents lose accuracy and burn tokens when forced to `grep` blindly or read entire files just to trace one function. **`treecut`** solves context bloat with a single, zero-config Rust binary:
 
-## ▸ What treecut is
+* **Surgical Symbol Slicing (`slice_symbol`)**: Extracts a target function, struct, or class definition alongside every cross-file call site and enclosing signature.
+* **Git-Diff Blast Radius (`slice_changed_symbols`)**: Intersects `git diff` hunks with parsed AST spans to isolate modified symbols and automatically pull in their callers.
+* **Compressed Repo Maps (`repo_skeleton`)**: Generates token-budgeted architectural outlines with function bodies stripped out.
+* **Incremental SQLite `mtime` Cache**: Indexes unchanged files in `.treecut/cache.db` so repeated slices across large repositories run in single-digit milliseconds.
+* **6 Languages Out of the Box**: Native `tree-sitter` support for **Rust**, **Python**, **TypeScript / TSX**, **Go**, **Java**, and **C / C++**.
+* **Dual-Mode Binary**: Runs as a headless `stdio` **MCP Server** inside your editor or as a standalone **Agentic CLI** in your terminal.
 
-treecut is a consolidated developer tool for **AST slicing**, **SQLite-cached repo maps**, and **Git-diff impact analysis**. Instead of dumping whole files into an LLM context, it extracts only the symbols that matter, plus their blast radius.
+---
 
-Runs in two modes over one shared core:
+## Quickstart
 
-- **MCP server** (`treecut mcp`) — stdio JSON-RPC 2.0 for AI hosts (OpenCode, Cursor, Claude Code).
-- **Agentic CLI** (`treecut ask` / `slice` / `map` / `diff-slice`) — deterministic extraction or a ReAct loop backed by any OpenAI-compatible endpoint.
-
-## ✦ Feature map
-
-| Area | What it covers |
-|------|----------------|
-| **Parsing** | Rust, Python, TypeScript/TSX, Go, Java, C/C++ via tree-sitter |
-| **Caching** | Incremental SQLite cache keyed on `(mtime, size)` in `.treecut/cache.db` |
-| **Slicing** | Symbol definitions + cross-file call sites with context lines |
-| **Diff impact** | Modified symbols from git diff + impacted callers (blast radius) |
-| **Traversal** | Gitignore-aware via the `ignore` crate |
-| **Degradation** | Unparseable/binary files skipped with `tracing::debug!` |
-| **MCP** | 4 tools over stdio JSON-RPC with strict stdout purity |
-| **CLI** | `map`, `slice`, `diff-slice`, `ask` subcommands |
-
-## ⚡ Quick start
+### Install via Cargo
 
 ```bash
+cargo install treecut
+```
+
+### Build from Source
+
+```bash
+git clone https://github.com/bigwalkdoe/treecut.git
+cd treecut
 cargo install --path .
-treecut map . --depth 4
-treecut slice my_func .
-treecut diff-slice . --base HEAD~1
-treecut mcp
 ```
 
-### MCP config
+> **Minimal MCP-only build** (excludes HTTP/LLM client dependencies):
+> ```bash
+> cargo install --path . --no-default-features --features mcp
+> ```
 
-OpenCode (`opencode.json`):
+---
+
+## MCP Server Setup
+
+`treecut mcp` communicates over standard `stdio` JSON-RPC 2.0 with zero background daemons or API keys required.
+
+### OpenCode (`opencode.json`)
 
 ```json
 {
-  "mcpServers": {
-    "treecut": { "command": "treecut", "args": ["mcp"] }
+  "$schema": "https://opencode.ai",
+  "mcp": {
+    "treecut": {
+      "type": "local",
+      "command": ["treecut", "mcp"],
+      "enabled": true
+    }
   }
 }
 ```
 
-Claude Code:
+### Claude Code (`~/.claude.json` or `.mcp.json`)
 
 ```json
 {
   "mcpServers": {
-    "treecut": { "command": "treecut", "args": ["mcp"] }
+    "treecut": {
+      "command": "treecut",
+      "args": ["mcp"]
+    }
   }
 }
 ```
 
-## 🔧 MCP tools
+### Cursor (`.cursor/mcp.json`)
 
-| Tool | Description |
-|------|-------------|
-| `repo_skeleton` | Compressed repo map with top-level declarations and line numbers |
-| `slice_symbol` | Full definitions + cross-file call sites for a symbol |
-| `slice_changed_symbols` | Modified symbols from a git diff + impacted callers |
-| `read_node` | Read a specific line range with line numbers |
+```json
+{
+  "mcpServers": {
+    "treecut": {
+      "command": "treecut",
+      "args": ["mcp"]
+    }
+  }
+}
+```
 
-## 🏗 Architecture
+### Exposed MCP Tools
+
+| Tool | Purpose | Key Arguments |
+| :--- | :--- | :--- |
+| `repo_skeleton` | Compressed codebase signature map | `root`, `max_depth`, `max_chars` |
+| `slice_symbol` | Full definition + cross-file call sites | `symbol`, `root`, `context_lines`, `max_chars` |
+| `slice_changed_symbols` | Modified AST symbols in Git diff + callers | `root`, `base_ref`, `include_callers`, `max_chars` |
+| `read_node` | Line-bounded precision source reader | `path`, `start_line`, `end_line` |
+
+---
+
+## CLI Usage
+
+Use `treecut` directly in terminal pipelines, Git hooks, or standalone agentic debugging sessions.
+
+### Deterministic Context Commands (No LLM Required)
+
+```bash
+# Generate a compressed repository skeleton (up to 12k chars)
+treecut map --depth 3 --max-chars 12000
+
+# Slice a symbol's definition and all call sites across the repo
+treecut slice verify_token
+
+# Extract only functions modified in uncommitted changes + their callers
+treecut diff-slice
+
+# Compare against a base branch before opening a PR
+treecut diff-slice --base main
+```
+
+### Agentic Terminal Mode (`treecut ask`)
+
+`treecut ask` runs a multi-turn ReAct tool loop using any OpenAI-compatible endpoint (defaults to local **Ollama** at `http://localhost:11434/v1`).
+
+```bash
+# Ask architectural questions backed by live AST slicing
+treecut ask "trace how session tokens are validated and where they expire"
+
+# Pipe compiler or test errors directly into the agent
+cargo test 2>&1 | treecut ask "diagnose this failure using the minimal call chain"
+
+# Use OpenRouter or a custom model
+LLM_API_KEY="sk-or-..." treecut ask \
+  --base-url "https://openrouter.ai" \
+  --model "anthropic/claude-sonnet-4" \
+  "review my current git diff for edge cases"
+```
+
+---
+
+## Architecture
+
+`treecut` is structured around a pure, UI-agnostic Rust core shared identically by both interface layers:
 
 ```text
-src/
-├── main.rs          # CLI router & stderr tracing
-├── lib.rs           # Re-exports core
-├── core/            # Pure-Rust engine (no UI/network coupling)
-│   ├── models.rs    # Shared tool schemas (JsonSchema)
-│   ├── cache.rs     # SQLite mtime/size cache
-│   ├── walker.rs    # Gitignore-aware discovery
-│   ├── parser.rs    # Tree-sitter extractors
-│   ├── slicer.rs    # Symbol + dependency slicer
-│   ├── skeleton.rs  # Repo map generator
-│   └── git_diff.rs  # Diff -> modified symbols + blast radius
-├── mcp.rs           # stdio JSON-RPC server
-└── agent.rs         # ReAct CLI agent loop
+                 ┌──────────────────────────┐
+                 │     treecut (Binary)     │
+                 └────────────┬─────────────┘
+                              │
+               ┌──────────────┴──────────────┐
+               ▼                             ▼
+   ┌───────────────────────┐     ┌───────────────────────┐
+   │   MCP Server (rmcp)   │     │  Agentic CLI (clap)   │
+   │  JSON-RPC over stdio  │     │ ReAct Loop & Pipes    │
+   └───────────┬───────────┘     └───────────┬───────────┘
+               └──────────────┬──────────────┘
+                              ▼
+┌──────────────────────────────────────────────────────────┐
+│                     Pure Core Engine                     │
+│  • ignore Walker      • Tree-sitter (6 Languages)        │
+│  • git2 Diff Mapper   • SQLite mtime Cache (.treecut/)   │
+└──────────────────────────────────────────────────────────┘
 ```
 
-## 📜 License
+* **Zero `stdout` Pollution**: All diagnostics and `tracing` logs route strictly to `stderr`, guaranteeing clean JSON-RPC framing in MCP mode.
+* **Automatic Cache Hygiene**: Creates `.treecut/cache.db` alongside a local `.treecut/.gitignore` (`*`) so your working tree stays clean.
 
-MIT OR Apache-2.0
+---
+
+## Contributing
+
+Contributions are welcome—especially new `tree-sitter` language queries, benchmark suites, and edge-case fixtures.
+
+```bash
+# Run the full test suite (AST parsers, SQLite cache invalidation, git2 diffs, & MCP stdio handshake)
+cargo test
+```
+
+## License
+
+Dual-licensed under either of:
+
+* **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or http://apache.org)
+* **MIT License** ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org)
+
+at your option.
