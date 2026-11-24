@@ -162,3 +162,75 @@ fn slice_symbol_csharp() {
     let result = core::slicer::slice_symbol(&args).unwrap();
     assert!(result.text.contains("Animal"));
 }
+
+// Import alias resolution tests
+
+fn fixture_dir(lang: &str) -> std::path::PathBuf {
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(lang)
+}
+
+#[test]
+fn slice_symbol_rust_alias() {
+    let dir = fixture_dir("rust_alias");
+    let args = core::SliceSymbolArgs { root: Some(dir.to_str().unwrap().to_string()), symbol: "verify_token".to_string(), ..Default::default() };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    // Should find both the definition and the aliased call site
+    assert!(result.text.contains("verify_token"), "Should find original symbol definition");
+    assert!(result.text.contains("check_tok"), "Should find aliased call site");
+    assert!(result.text.contains("via alias check_tok"), "Should annotate aliased match");
+}
+
+#[test]
+fn slice_symbol_typescript_alias() {
+    let dir = fixture_dir("typescript_alias");
+    let args = core::SliceSymbolArgs { root: Some(dir.to_str().unwrap().to_string()), symbol: "verifyToken".to_string(), ..Default::default() };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    assert!(result.text.contains("verifyToken"), "Should find original symbol definition");
+    assert!(result.text.contains("checkTok"), "Should find aliased call site");
+    assert!(result.text.contains("via alias checkTok"), "Should annotate aliased match");
+}
+
+#[test]
+fn slice_symbol_python_alias() {
+    let dir = fixture_dir("python_alias");
+    let args = core::SliceSymbolArgs { root: Some(dir.to_str().unwrap().to_string()), symbol: "verify_token".to_string(), ..Default::default() };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    assert!(result.text.contains("verify_token"), "Should find original symbol definition");
+    assert!(result.text.contains("check_tok"), "Should find aliased call site");
+    assert!(result.text.contains("via alias check_tok"), "Should annotate aliased match");
+}
+
+#[test]
+fn parse_imports_rust() {
+    let path = fixture_dir("rust_alias").join("middleware.rs");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let parsed = core::parser::parse_file_with_imports(&path, &source);
+    assert_eq!(parsed.imports.len(), 1);
+    assert_eq!(parsed.imports[0].original, "verify_token");
+    assert_eq!(parsed.imports[0].alias, "check_tok");
+    assert!(parsed.imports[0].source_module.as_ref().unwrap().contains("auth"));
+}
+
+#[test]
+fn parse_imports_typescript() {
+    let path = fixture_dir("typescript_alias").join("middleware.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let parsed = core::parser::parse_file_with_imports(&path, &source);
+    assert_eq!(parsed.imports.len(), 1);
+    assert_eq!(parsed.imports[0].original, "verifyToken");
+    assert_eq!(parsed.imports[0].alias, "checkTok");
+    assert!(parsed.imports[0].source_module.as_ref().unwrap().contains("auth"));
+}
+
+#[test]
+fn parse_imports_python() {
+    let path = fixture_dir("python_alias").join("middleware.py");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let parsed = core::parser::parse_file_with_imports(&path, &source);
+    assert_eq!(parsed.imports.len(), 1);
+    assert_eq!(parsed.imports[0].original, "verify_token");
+    assert_eq!(parsed.imports[0].alias, "check_tok");
+    assert!(parsed.imports[0].source_module.as_ref().unwrap().contains("auth"));
+}
