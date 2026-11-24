@@ -1,0 +1,9 @@
+{
+  "mcp": {
+    "treecut": {
+      "type": "local",
+      "command": ["treecut", "mcp"],
+      "enabled": true
+    }
+  }
+}
