@@ -52,13 +52,11 @@ async fn main() {
     match cli.command {
         Commands::Mcp => treecut::mcp::run().await,
         Commands::Map { path, depth, max_chars, stats } => {
-            let args = core::RepoSkeletonArgs { root: path, max_depth: depth, max_chars, stats: Some(stats), ..Default::default() };
+            let args = core::RepoSkeletonArgs { root: path, max_depth: depth, max_chars, stats: Some(stats), no_cache: Some(false) };
             let r = core::repo_skeleton(&args).unwrap();
             println!("{}", r.text);
-            if stats {
-                if let Some(s) = r.stats {
-                    print_stats(&s);
-                }
+            if stats && r.stats.is_some() {
+                print_stats(r.stats.as_ref().unwrap());
             }
         }
         Commands::Slice { symbols, path, max_chars, context_lines, stats } => {
@@ -66,30 +64,24 @@ async fn main() {
                 let args = core::SliceSymbolArgs { root: path, symbol: symbols[0].clone(), max_chars, context_lines, stats: Some(stats) };
                 let r = core::slice_symbol(&args).unwrap();
                 println!("{}", r.text);
-                if stats {
-                    if let Some(s) = r.stats {
-                        print_stats(&s);
-                    }
+                if stats && r.stats.is_some() {
+                    print_stats(r.stats.as_ref().unwrap());
                 }
             } else {
                 let args = core::SliceSymbolsArgs { root: path, symbols, max_chars, context_lines, stats: Some(stats) };
                 let r = core::slice_symbols(&args).unwrap();
                 println!("{}", r.text);
-                if stats {
-                    if let Some(s) = r.stats {
-                        print_stats(&s);
-                    }
+                if stats && r.stats.is_some() {
+                    print_stats(r.stats.as_ref().unwrap());
                 }
             }
         }
         Commands::DiffSlice { path, max_chars, base, stats } => {
-            let args = core::SliceChangedArgs { root: path, max_chars, base_ref: base, stats: Some(stats) };
+            let args = core::SliceChangedArgs { root: path, max_chars, base_ref: base, stats: Some(stats), include_callers: Some(true) };
             let r = core::slice_changed_symbols(&args).unwrap();
             println!("{}", r.text);
-            if stats {
-                if let Some(s) = r.stats {
-                    print_stats(&s);
-                }
+            if stats && r.stats.is_some() {
+                print_stats(r.stats.as_ref().unwrap());
             }
         }
         Commands::Ask { prompt } => {
