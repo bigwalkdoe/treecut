@@ -11,11 +11,17 @@ pub fn lang_for(language: &str) -> Option<Language> {
         "java" => Some(tree_sitter_java::LANGUAGE.into()),
         "c" => Some(tree_sitter_c::LANGUAGE.into()),
         "cpp" => Some(tree_sitter_cpp::LANGUAGE.into()),
+        #[cfg(feature = "extra-langs")]
         "javascript" => Some(tree_sitter_javascript::LANGUAGE.into()),
+        #[cfg(feature = "extra-langs")]
         "csharp" => Some(tree_sitter_c_sharp::LANGUAGE.into()),
+        #[cfg(feature = "extra-langs")]
         "ruby" => Some(tree_sitter_ruby::LANGUAGE.into()),
+        #[cfg(feature = "extra-langs")]
         "php" => Some(tree_sitter_php::LANGUAGE_PHP.into()),
+        #[cfg(feature = "extra-langs")]
         "swift" => Some(tree_sitter_swift::LANGUAGE.into()),
+        #[cfg(feature = "extra-langs")]
         "bash" => Some(tree_sitter_bash::LANGUAGE.into()),
         _ => None,
     }
@@ -29,11 +35,17 @@ fn symbol_node_kinds(language: &str) -> &'static [&'static str] {
         "go" => &["function_declaration", "method_declaration", "type_declaration"],
         "java" => &["class_declaration", "interface_declaration", "enum_declaration", "method_declaration", "constructor_declaration"],
         "c" | "cpp" => &["function_definition", "struct_specifier", "class_specifier", "enum_specifier"],
+        #[cfg(feature = "extra-langs")]
         "javascript" => &["function_declaration", "class_declaration", "method_definition", "lexical_declaration"],
+        #[cfg(feature = "extra-langs")]
         "csharp" => &["class_declaration", "struct_declaration", "interface_declaration", "enum_declaration", "record_declaration", "method_declaration", "constructor_declaration"],
+        #[cfg(feature = "extra-langs")]
         "ruby" => &["class", "module", "method", "singleton_method"],
+        #[cfg(feature = "extra-langs")]
         "php" => &["class_declaration", "interface_declaration", "trait_declaration", "enum_declaration", "function_definition", "method_declaration"],
+        #[cfg(feature = "extra-langs")]
         "swift" => &["class_declaration", "struct_declaration", "protocol_declaration", "enum_declaration", "function_declaration", "init_declaration"],
+        #[cfg(feature = "extra-langs")]
         "bash" => &["function_definition"],
         _ => &[],
     }
@@ -43,8 +55,11 @@ fn import_node_kinds(language: &str) -> &'static [&'static str] {
     match language {
         "rust" => &["use_declaration"],
         "python" => &["import_statement", "import_from_statement"],
-        "typescript" | "tsx" | "javascript" => &["import_statement"],
+        "typescript" | "tsx" => &["import_statement"],
+        #[cfg(feature = "extra-langs")]
+        "javascript" => &["import_statement"],
         "go" => &["import_declaration"],
+        #[cfg(feature = "extra-langs")]
         "csharp" => &["using_directive"],
         _ => &[],
     }
@@ -104,8 +119,11 @@ fn extract_imports(node: &Node, source: &str, _path: &Path, language: &str, out:
     match language {
         "rust" => extract_rust_imports(node, source, out),
         "python" => extract_python_imports(node, source, out),
-        "typescript" | "tsx" | "javascript" => extract_ts_imports(node, source, out),
+        "typescript" | "tsx" => extract_ts_imports(node, source, out),
         "go" => extract_go_imports(node, source, out),
+        #[cfg(feature = "extra-langs")]
+        "javascript" => extract_ts_imports(node, source, out),
+        #[cfg(feature = "extra-langs")]
         "csharp" => extract_csharp_imports(node, source, out),
         _ => {}
     }
@@ -248,6 +266,7 @@ fn extract_go_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {
     }
 }
 
+#[cfg(feature = "extra-langs")]
 fn extract_csharp_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {
     // using CheckTok = Auth.VerifyToken;
     // Matches using_directive with name_equals
