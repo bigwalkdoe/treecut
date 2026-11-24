@@ -39,6 +39,10 @@ async fn main() {
             let r = core::slice_changed_symbols(&args).unwrap();
             println!("{}", r.text);
         }
-        Commands::Ask { prompt: _ } => {}
+        Commands::Ask { prompt } => {
+            let model = std::env::var("TREECT_MODEL").unwrap_or_else(|_| "llama3.2".to_string());
+            let base_url = std::env::var("TREECT_BASE_URL").unwrap_or_else(|_| "http://localhost:11434/v1".to_string());
+            treecut::agent::run_ask(&prompt, ".", &model, &base_url).await;
+        }
     }
 }

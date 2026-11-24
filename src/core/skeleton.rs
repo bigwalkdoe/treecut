@@ -12,7 +12,11 @@ pub fn repo_skeleton(args: &RepoSkeletonArgs) -> Result<ToolOutput> {
     let max_chars = args.max_chars.unwrap_or(12000);
     let no_cache = args.no_cache.unwrap_or(false);
     let cache = if no_cache { None } else { Cache::open(root_path).ok() };
+    let max_depth = args.max_depth.unwrap_or(4);
     let files = walk_files(root_path);
+    let files: Vec<_> = files.into_iter().filter(|p| {
+        p.strip_prefix(root_path).ok().map(|r| r.components().count() <= max_depth).unwrap_or(true)
+    }).collect();
     let rels: Vec<String> = files.iter().filter_map(|p| p.strip_prefix(root_path).ok().map(|r| r.to_string_lossy().to_string())).collect();
     if let Some(c) = &cache { let _ = c.prune(&rels); }
     let mut entries: Vec<String> = Vec::new();
