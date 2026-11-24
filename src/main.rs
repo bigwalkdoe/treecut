@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use tracing_subscriber;
+use tracing_subscriber::fmt;
 use treecut::core;
 
 #[derive(Parser)]
@@ -20,7 +20,7 @@ enum Commands {
 
 #[tokio::main]
 async fn main() {
-    let _ = tracing_subscriber::fmt().with_writer(std::io::stderr).with_ansi(false).try_init();
+    let _ = fmt().with_writer(std::io::stderr).with_ansi(false).try_init();
     let cli = Cli::parse();
     match cli.command {
         Commands::Mcp => treecut::mcp::run().await,
