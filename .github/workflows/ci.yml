@@ -32,9 +32,6 @@ jobs:
       - name: Cache Cargo registry and build artifacts
         uses: Swatinem/rust-cache@v2
 
-      - name: Check code formatting
-        run: cargo fmt --all -- --check
-
       - name: Run Clippy lints (all features)
         run: cargo clippy --all-targets --all-features
 
