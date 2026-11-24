@@ -5,7 +5,6 @@ edition = "2024"
 description = "Local-first AST, SQLite-cached, and Git-diff context slicer for AI coding agents"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/bigwalkdoe/treecut"
-homepage = "https://github.com/bigwalkdoe/treecut"
 documentation = "https://docs.rs/treecut"
 readme = "README.md"
 exclude = [
