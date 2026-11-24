@@ -10,6 +10,8 @@ readme = "README.md"
 exclude = [
     ".github/*",
     ".treecut/*",
+    "assets/*",
+    "demo.tape",
     "SPEC.md",
 ]
 keywords = ["mcp", "tree-sitter", "ast", "cli", "ai"]
