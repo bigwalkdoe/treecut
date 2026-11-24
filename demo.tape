@@ -1,43 +1,53 @@
-# Demo recording script for treecut
-# Install vhs: https://github.com/charmbracelet/vhs
-# Run: vhs demo.tape
+# VHS Tape Script for treecut v0.1.0
+# Run with: vhs demo.tape
 
-Output demo.gif
-Set Theme "dracula"
-Set FontSize 14
-Set Width 1000
-Set Height 600
+Output assets/demo.gif
 
-# Setup a sample repo
-Type "mkdir -p /tmp/treecut-demo && cd /tmp/treecut-demo"
-Sleep 500ms
-Type "git init -q"
+# Terminal Window & Theme Styling
+Set Shell "bash"
+Set FontSize 15
+Set Width 1150
+Set Height 680
+Set Padding 24
+Set Theme "Catppuccin Mocha"
+Set TypingSpeed 40ms
+Set PlaybackSpeed 1.0
+
+# Ensure assets directory exists and warm up silently
+Hide
+Type "mkdir -p assets"
+Enter
 Sleep 200ms
-Type "cat > main.rs << 'EOF'\npub fn validate_token(token: &str) -> bool {\n    token.len() > 8\n}\n\npub fn authenticate(user: &str, token: &str) -> Result<String, String> {\n    if validate_token(token) {\n        Ok(format!(\"Welcome, {}\", user))\n    } else {\n        Err(\"Invalid token\".into())\n    }\n}\n\npub fn main() {\n    let result = authenticate(\"alice\", \"secret123\");\n    println!(\"{:?}\", result);\n}\nEOF"
-Sleep 500ms
-Type "cat > lib.rs << 'EOF'\nuse crate::main::{validate_token, authenticate};\n\npub fn login(user: &str, token: &str) -> bool {\n    authenticate(user, token).is_ok()\n}\nEOF"
-Sleep 500ms
-Type "git add . && git commit -m 'initial' -q"
-Sleep 500ms
-
-# Demo treecut map
-Type "treecut map --depth 3 --max-chars 8000"
-Sleep 2000ms
+Type "clear"
 Enter
+Show
 
-# Demo treecut slice
-Type "treecut slice validate_token"
-Sleep 2000ms
+# 1. Compressed Repository Skeleton
+Type "# 1. Generate a compressed, token-budgeted repo skeleton"
 Enter
+Sleep 400ms
+Type "treecut map --depth 2 --max-chars 1400"
+Enter
+Sleep 2.5s
 
-# Modify a file and demo diff-slice
-Type "sed -i 's/token.len() > 8/token.len() >= 10/' main.rs"
-Sleep 300ms
-Type "treecut diff-slice"
-Sleep 2000ms
+# 2. Surgical Symbol + Caller Slicing
+Type "clear"
 Enter
+Sleep 200ms
+Type "# 2. Slice a symbol's definition + every cross-file call site"
+Enter
+Sleep 400ms
+Type "treecut slice slice_symbol --max-chars 1800"
+Enter
+Sleep 3s
 
-# Demo slice_changed_symbols with base ref
-Type "treecut diff-slice --base HEAD~1"
-Sleep 2000ms
+# 3. Git-Diff Blast Radius
+Type "clear"
 Enter
+Sleep 200ms
+Type "# 3. Extract modified AST symbols in Git diff + impacted callers"
+Enter
+Sleep 400ms
+Type "treecut diff-slice --max-chars 1800"
+Enter
+Sleep 3.5s
