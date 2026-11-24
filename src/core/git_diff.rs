@@ -1,7 +1,7 @@
 use crate::core::models::{SliceChangedArgs, SliceSymbolArgs, ToolOutput};
 use crate::core::parser::parse_file;
 use crate::core::slicer::slice_symbol;
-use crate::core::walker::{walk_files, language_for};
+use crate::core::walker::language_for;
 use anyhow::Result;
 use git2::Repository;
 use std::path::Path;
