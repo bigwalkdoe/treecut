@@ -1,4 +1,4 @@
-<h1 align="center">TREECT ☤</h1>
+<h1 align="center">TREECUT ☤</h1>
 
 <p align="center">
   <strong>Local-first AST, SQLite-cached, and Git-diff context slicer for AI coding agents — dispatched through one binary.</strong>
