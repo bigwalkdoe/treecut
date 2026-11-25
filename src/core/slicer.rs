@@ -61,22 +61,19 @@ fn slice_symbols_internal(args: &SliceSymbolsArgs) -> Result<ToolOutput> {
     
     for p in walk_files(root_path) {
         // Apply scope filter
-        if let Some(scope) = scope_filter {
-            if let Ok(rel) = p.strip_prefix(root_path) {
-                if !rel.starts_with(scope) {
-                    continue;
-                }
-            }
+        if let Some(scope) = scope_filter
+            && let Ok(rel) = p.strip_prefix(root_path)
+            && !rel.starts_with(scope)
+        {
+            continue;
         }
         
         // Apply include filter (exclude patterns)
-        if let Some(ref filter) = include_filter {
-            if let Ok(rel) = p.strip_prefix(root_path) {
-                let rel_str = rel.to_string_lossy();
-                if filter.is_match(rel_str.as_ref()) {
-                    continue; // exclude if matches include pattern (treat as exclude)
-                }
-            }
+        if let Some(ref filter) = include_filter
+            && let Ok(rel) = p.strip_prefix(root_path)
+            && filter.is_match(rel.to_string_lossy().as_ref())
+        {
+            continue; // exclude if matches include pattern (treat as exclude)
         }
         
         let _lang = match language_for(&p) { Some(l) => l, None => continue };

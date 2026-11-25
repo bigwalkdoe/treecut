@@ -118,10 +118,10 @@ fn collect_symbols(node: &Node, source: &str, path: &Path, kinds: &[&str], out: 
 fn find_enclosing_symbol(node: &Node, source: &str, kinds: &[&str]) -> Option<String> {
     let mut parent = node.parent();
     while let Some(p) = parent {
-        if kinds.iter().any(|k| *k == p.kind()) {
-            if let Some(name_node) = p.child_by_field_name("name").or_else(|| p.child_by_field_name("type")) {
-                return Some(source[name_node.byte_range()].to_string());
-            }
+        if kinds.iter().any(|k| *k == p.kind())
+            && let Some(name_node) = p.child_by_field_name("name").or_else(|| p.child_by_field_name("type"))
+        {
+            return Some(source[name_node.byte_range()].to_string());
         }
         parent = p.parent();
     }
@@ -133,12 +133,12 @@ fn extract_callees(node: &Node, source: &str) -> Vec<String> {
     let mut callees = Vec::new();
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
-        if child.kind() == "call_expression" || child.kind() == "function_call" || child.kind() == "call" {
-            if let Some(func_node) = child.child_by_field_name("function").or_else(|| child.child_by_field_name("name")) {
-                let callee = source[func_node.byte_range()].to_string();
-                if !callees.contains(&callee) {
-                    callees.push(callee);
-                }
+        if (child.kind() == "call_expression" || child.kind() == "function_call" || child.kind() == "call")
+            && let Some(func_node) = child.child_by_field_name("function").or_else(|| child.child_by_field_name("name"))
+        {
+            let callee = source[func_node.byte_range()].to_string();
+            if !callees.contains(&callee) {
+                callees.push(callee);
             }
         }
         // Recursively check children

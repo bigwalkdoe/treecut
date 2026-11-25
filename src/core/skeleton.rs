@@ -40,13 +40,11 @@ pub fn repo_skeleton(args: &RepoSkeletonArgs) -> Result<ToolOutput> {
             }
         }
         // Apply include filter (exclude patterns)
-        if let Some(ref filter) = include_filter {
-            if let Ok(rel) = p.strip_prefix(root_path) {
-                let rel_str = rel.to_string_lossy();
-                if filter.is_match(rel_str.as_ref()) {
-                    return false; // exclude if matches include pattern
-                }
-            }
+        if let Some(ref filter) = include_filter
+            && let Ok(rel) = p.strip_prefix(root_path)
+            && filter.is_match(rel.to_string_lossy().as_ref())
+        {
+            return false; // exclude if matches include pattern
         }
         p.strip_prefix(root_path).ok().map(|r| r.components().count() <= max_depth).unwrap_or(true)
     }).collect();
