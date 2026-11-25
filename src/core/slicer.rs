@@ -41,7 +41,7 @@ fn slice_symbols_internal(args: &SliceSymbolsArgs) -> Result<ToolOutput> {
     let mut total_sliced_bytes: usize = 0;
     
     // Build scope and include filters
-    let scope_filter = args.scope.as_ref().map(|s| Path::new(s));
+    let scope_filter = args.scope.as_deref().map(Path::new);
     let include_filter = args.include.as_ref().and_then(|incs| {
         let mut builder = globset::GlobSetBuilder::new();
         for inc in incs {
@@ -262,11 +262,11 @@ fn slice_symbols_internal(args: &SliceSymbolsArgs) -> Result<ToolOutput> {
             };
             
             // Re-parse to get tree for identifier references
-            let lang_str = language_for(Path::new(file)).unwrap_or("rust");
-            let ts_lang = lang_for(lang_str).unwrap();
+            let Some(lang_str) = language_for(Path::new(file)) else { continue; };
+            let Some(ts_lang) = lang_for(lang_str) else { continue; };
             let mut parser = Parser::new();
-            parser.set_language(&ts_lang).unwrap();
-            let tree = parser.parse(source, None).unwrap();
+            if parser.set_language(&ts_lang).is_err() { continue; }
+            let Some(tree) = parser.parse(source, None) else { continue; };
             
             let lines: Vec<&str> = source.lines().collect();
             let mut file_sliced_bytes = 0;
@@ -276,7 +276,7 @@ fn slice_symbols_internal(args: &SliceSymbolsArgs) -> Result<ToolOutput> {
             for sym_name in &initial_symbols {
                 if out.len() >= max_chars { break; }
                 
-                let local_names = symbol_to_locals.get(sym_name).unwrap();
+                let Some(local_names) = symbol_to_locals.get(sym_name) else { continue; };
                 let refs = find_identifier_references(&tree.root_node(), source, local_names, &parsed.imports, sym_name);
                 
                 for (line, via_alias) in refs {

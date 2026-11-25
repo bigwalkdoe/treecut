@@ -16,7 +16,7 @@ pub fn repo_skeleton(args: &RepoSkeletonArgs) -> Result<ToolOutput> {
     let max_depth = args.max_depth.unwrap_or(4);
     
     // Build scope and include filters
-    let scope_filter = args.scope.as_ref().map(|s| Path::new(s));
+    let scope_filter = args.scope.as_deref().map(Path::new);
     let include_filter = args.include.as_ref().and_then(|incs| {
         let mut builder = globset::GlobSetBuilder::new();
         for inc in incs {
