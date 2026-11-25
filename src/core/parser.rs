@@ -93,10 +93,10 @@ fn collect_symbols(node: &Node, source: &str, path: &Path, kinds: &[&str], out: 
             .unwrap_or_else(|| node.kind().to_string());
         
         // Find enclosing symbol (parent function/class)
-        let enclosing_symbol = find_enclosing_symbol(&node, source, kinds);
+        let enclosing_symbol = find_enclosing_symbol(node, source, kinds);
         
         // Extract callees from call expressions within this symbol
-        let callees = extract_callees(&node, source);
+        let callees = extract_callees(node, source);
         
         out.push(SymbolInfo {
             name,
