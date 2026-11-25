@@ -1,9 +1,0 @@
-{
-  "mcp": {
-    "treecut": {
-      "type": "local",
-      "command": ["/home/deon/dev/github/treecut/target/release/treecut", "mcp"],
-      "enabled": true
-    }
-  }
-}

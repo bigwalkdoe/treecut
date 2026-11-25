@@ -27,3 +27,6 @@ Thumbs.db
 .env.*
 *.sqlite
 *.db
+
+# Local OpenCode config
+opencode.json
