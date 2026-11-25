@@ -14,8 +14,40 @@ pub fn repo_skeleton(args: &RepoSkeletonArgs) -> Result<ToolOutput> {
     let track_stats = args.stats.unwrap_or(false);
     let cache = if no_cache { None } else { Cache::open(root_path).ok() };
     let max_depth = args.max_depth.unwrap_or(4);
+    
+    // Build scope and include filters
+    let scope_filter = args.scope.as_ref().map(|s| Path::new(s));
+    let include_filter = args.include.as_ref().and_then(|incs| {
+        let mut builder = globset::GlobSetBuilder::new();
+        for inc in incs {
+            if let Ok(glob) = globset::Glob::new(inc) {
+                builder.add(glob);
+            }
+        }
+        builder.build().ok()
+    });
+    
     let files = walk_files(root_path);
     let files: Vec<_> = files.into_iter().filter(|p| {
+        // Apply scope filter
+        if let Some(scope) = scope_filter {
+            if let Ok(rel) = p.strip_prefix(root_path) {
+                if !rel.starts_with(scope) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        // Apply include filter (exclude patterns)
+        if let Some(ref filter) = include_filter {
+            if let Ok(rel) = p.strip_prefix(root_path) {
+                let rel_str = rel.to_string_lossy();
+                if filter.is_match(rel_str.as_ref()) {
+                    return false; // exclude if matches include pattern
+                }
+            }
+        }
         p.strip_prefix(root_path).ok().map(|r| r.components().count() <= max_depth).unwrap_or(true)
     }).collect();
     let rels: Vec<String> = files.iter().filter_map(|p| p.strip_prefix(root_path).ok().map(|r| r.to_string_lossy().to_string())).collect();

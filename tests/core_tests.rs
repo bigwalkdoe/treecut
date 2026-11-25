@@ -322,7 +322,11 @@ fn slice_symbols_dedupe_symbols() {
     let result = core::slicer::slice_symbols(&args).unwrap();
     eprintln!("OUTPUT:\n{}", result.text);
     // Should only show each match once
+    // Definition contains "verify_token", call site contains alias "check_tok"
     let verify_token_count = result.text.matches("verify_token").count();
-    // Should find at least definition + call site, may include alias references
-    assert!(verify_token_count >= 2, "Should find definition + call site, got {}", verify_token_count);
+    let check_tok_count = result.text.matches("check_tok").count();
+    // Should find at least definition + call site (via alias)
+    assert!(verify_token_count >= 1 && check_tok_count >= 1, 
+        "Should find definition (verify_token) + call site (check_tok), got verify_token={}, check_tok={}", 
+        verify_token_count, check_tok_count);
 }

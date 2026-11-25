@@ -43,6 +43,8 @@ pub async fn run() {
                         max_chars: args.get("max_chars").and_then(|v| v.as_u64()).map(|n| n as usize),
                         no_cache: args.get("no_cache").and_then(|v| v.as_bool()),
                         stats: args.get("stats").and_then(|v| v.as_bool()),
+                        scope: args.get("scope").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                        include: args.get("include").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str()).map(|s| s.to_string()).collect()),
                     };
                     core::repo_skeleton(&a).map(|r| r.text).unwrap_or_default()
                 }
@@ -54,6 +56,10 @@ pub async fn run() {
                         context_lines: args.get("context_lines").and_then(|v| v.as_u64()).map(|n| n as usize),
                         max_chars: args.get("max_chars").and_then(|v| v.as_u64()).map(|n| n as usize),
                         stats: args.get("stats").and_then(|v| v.as_bool()),
+                        depth: args.get("depth").and_then(|v| v.as_u64()).map(|n| n as usize),
+                        direction: args.get("direction").and_then(|v| v.as_str()).and_then(|s| match s.to_lowercase().as_str() { "callers" => Some(core::models::TraversalDirection::Callers), "callees" => Some(core::models::TraversalDirection::Callees), "both" => Some(core::models::TraversalDirection::Both), _ => None }),
+                        scope: args.get("scope").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                        include: args.get("include").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str()).map(|s| s.to_string()).collect()),
                     };
                     core::slice_symbol(&a).map(|r| r.text).unwrap_or_default()
                 }
@@ -67,6 +73,10 @@ pub async fn run() {
                         context_lines: args.get("context_lines").and_then(|v| v.as_u64()).map(|n| n as usize),
                         max_chars: args.get("max_chars").and_then(|v| v.as_u64()).map(|n| n as usize),
                         stats: args.get("stats").and_then(|v| v.as_bool()),
+                        depth: args.get("depth").and_then(|v| v.as_u64()).map(|n| n as usize),
+                        direction: args.get("direction").and_then(|v| v.as_str()).and_then(|s| match s.to_lowercase().as_str() { "callers" => Some(core::models::TraversalDirection::Callers), "callees" => Some(core::models::TraversalDirection::Callees), "both" => Some(core::models::TraversalDirection::Both), _ => None }),
+                        scope: args.get("scope").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                        include: args.get("include").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str()).map(|s| s.to_string()).collect()),
                     };
                     core::slice_symbols(&a).map(|r| r.text).unwrap_or_default()
                 }
@@ -77,6 +87,10 @@ pub async fn run() {
                         include_callers: args.get("include_callers").and_then(|v| v.as_bool()),
                         max_chars: args.get("max_chars").and_then(|v| v.as_u64()).map(|n| n as usize),
                         stats: args.get("stats").and_then(|v| v.as_bool()),
+                        depth: args.get("depth").and_then(|v| v.as_u64()).map(|n| n as usize),
+                        direction: args.get("direction").and_then(|v| v.as_str()).and_then(|s| match s.to_lowercase().as_str() { "callers" => Some(core::models::TraversalDirection::Callers), "callees" => Some(core::models::TraversalDirection::Callees), "both" => Some(core::models::TraversalDirection::Both), _ => None }),
+                        scope: args.get("scope").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                        include: args.get("include").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str()).map(|s| s.to_string()).collect()),
                     };
                     core::slice_changed_symbols(&a).map(|r| r.text).unwrap_or_default()
                 }

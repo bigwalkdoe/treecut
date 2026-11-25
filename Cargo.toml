@@ -1,6 +1,6 @@
 [package]
 name = "treecut"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 description = "Local-first AST, SQLite-cached, and Git-diff context slicer for AI coding agents"
 license = "MIT OR Apache-2.0"
@@ -20,7 +20,7 @@ categories = ["command-line-utilities", "development-tools"]
 [features]
 default = ["cli", "mcp", "extra-langs"]
 cli = ["dep:reqwest"]
-mcp = ["dep:rmcp"]
+mcp = []
 extra-langs = [
     "dep:tree-sitter-javascript",
     "dep:tree-sitter-c-sharp",
@@ -34,6 +34,7 @@ extra-langs = [
 anyhow = "1.0"
 clap = { version = "4.5", features = ["derive", "env"] }
 git2 = { version = "0.20", default-features = false }
+globset = "0.4"
 ignore = "0.4"
 rusqlite = { version = "0.34", features = ["bundled"] }
 schemars = "1.0"
@@ -61,7 +62,6 @@ tree-sitter-swift = { version = "0.7", optional = true }
 tree-sitter-bash = { version = "0.23", optional = true }
 
 reqwest = { version = "0.13", features = ["json"], optional = true }
-rmcp = { version = "0.1", optional = true }
 
 [dev-dependencies]
 tempfile = "3.15"

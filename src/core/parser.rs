@@ -91,18 +91,60 @@ fn collect_symbols(node: &Node, source: &str, path: &Path, kinds: &[&str], out: 
             .or_else(|| node.child_by_field_name("type"))
             .map(|n| source[n.byte_range()].to_string())
             .unwrap_or_else(|| node.kind().to_string());
+        
+        // Find enclosing symbol (parent function/class)
+        let enclosing_symbol = find_enclosing_symbol(&node, source, kinds);
+        
+        // Extract callees from call expressions within this symbol
+        let callees = extract_callees(&node, source);
+        
         out.push(SymbolInfo {
             name,
             kind: node.kind().to_string(),
             file: path.to_string_lossy().to_string(),
             start_line: node.start_position().row + 1,
             end_line: node.end_position().row + 1,
+            enclosing_symbol,
+            callees,
         });
     }
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         collect_symbols(&child, source, path, kinds, out);
     }
+}
+
+// Find the nearest enclosing symbol (function/class) that contains this node
+fn find_enclosing_symbol(node: &Node, source: &str, kinds: &[&str]) -> Option<String> {
+    let mut parent = node.parent();
+    while let Some(p) = parent {
+        if kinds.iter().any(|k| *k == p.kind()) {
+            if let Some(name_node) = p.child_by_field_name("name").or_else(|| p.child_by_field_name("type")) {
+                return Some(source[name_node.byte_range()].to_string());
+            }
+        }
+        parent = p.parent();
+    }
+    None
+}
+
+// Extract callees (function calls) from within a symbol's body
+fn extract_callees(node: &Node, source: &str) -> Vec<String> {
+    let mut callees = Vec::new();
+    let mut cursor = node.walk();
+    for child in node.children(&mut cursor) {
+        if child.kind() == "call_expression" || child.kind() == "function_call" || child.kind() == "call" {
+            if let Some(func_node) = child.child_by_field_name("function").or_else(|| child.child_by_field_name("name")) {
+                let callee = source[func_node.byte_range()].to_string();
+                if !callees.contains(&callee) {
+                    callees.push(callee);
+                }
+            }
+        }
+        // Recursively check children
+        callees.extend(extract_callees(&child, source));
+    }
+    callees
 }
 
 fn collect_imports(node: &Node, source: &str, path: &Path, language: &str, kinds: &[&str], out: &mut Vec<ImportAlias>) {
@@ -131,17 +173,14 @@ fn extract_imports(node: &Node, source: &str, _path: &Path, language: &str, out:
 
 fn extract_rust_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {
     // use crate::auth::verify_token as check_tok;
-    // Matches use_as_clause inside use_declaration
-    let mut cursor = node.walk();
-    for child in node.children(&mut cursor) {
-        if child.kind() == "use_as_clause" {
-            // path -> original, alias -> alias
-            let path_node = child.child_by_field_name("path");
-            let alias_node = child.child_by_field_name("alias");
+    // Matches use_as_clause anywhere in the use_declaration (handles grouped imports)
+    fn walk_use(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {
+        if node.kind() == "use_as_clause" {
+            let path_node = node.child_by_field_name("path");
+            let alias_node = node.child_by_field_name("alias");
             if let (Some(p), Some(a)) = (path_node, alias_node) {
                 let path_text = source[p.byte_range()].to_string();
                 let alias_text = source[a.byte_range()].to_string();
-                // Get last segment of path as original
                 let original = path_text.split("::").last().unwrap_or(&path_text).to_string();
                 out.push(ImportAlias {
                     original,
@@ -150,7 +189,12 @@ fn extract_rust_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {
                 });
             }
         }
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            walk_use(&child, source, out);
+        }
     }
+    walk_use(node, source, out);
 }
 
 fn extract_python_imports(node: &Node, source: &str, out: &mut Vec<ImportAlias>) {

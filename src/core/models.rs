@@ -1,6 +1,15 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, JsonSchema, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum TraversalDirection {
+    #[default]
+    Callers,
+    Callees,
+    Both,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
 pub struct RepoSkeletonArgs {
     #[serde(default)]
@@ -13,6 +22,10 @@ pub struct RepoSkeletonArgs {
     pub no_cache: Option<bool>,
     #[serde(default)]
     pub stats: Option<bool>,
+    #[serde(default)]
+    pub scope: Option<String>,
+    #[serde(default)]
+    pub include: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
@@ -25,7 +38,7 @@ pub struct ImportAlias {
     pub source_module: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct ParsedFile {
     pub symbols: Vec<SymbolInfo>,
     pub imports: Vec<ImportAlias>,
@@ -42,6 +55,14 @@ pub struct SliceSymbolArgs {
     pub max_chars: Option<usize>,
     #[serde(default)]
     pub stats: Option<bool>,
+    #[serde(default)]
+    pub depth: Option<usize>,
+    #[serde(default)]
+    pub direction: Option<TraversalDirection>,
+    #[serde(default)]
+    pub scope: Option<String>,
+    #[serde(default)]
+    pub include: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
@@ -55,6 +76,14 @@ pub struct SliceSymbolsArgs {
     pub max_chars: Option<usize>,
     #[serde(default)]
     pub stats: Option<bool>,
+    #[serde(default)]
+    pub depth: Option<usize>,
+    #[serde(default)]
+    pub direction: Option<TraversalDirection>,
+    #[serde(default)]
+    pub scope: Option<String>,
+    #[serde(default)]
+    pub include: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, Default)]
@@ -69,6 +98,14 @@ pub struct SliceChangedArgs {
     pub max_chars: Option<usize>,
     #[serde(default)]
     pub stats: Option<bool>,
+    #[serde(default)]
+    pub depth: Option<usize>,
+    #[serde(default)]
+    pub direction: Option<TraversalDirection>,
+    #[serde(default)]
+    pub scope: Option<String>,
+    #[serde(default)]
+    pub include: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
@@ -78,13 +115,17 @@ pub struct ReadNodeArgs {
     pub end_line: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]
 pub struct SymbolInfo {
     pub name: String,
     pub kind: String,
     pub file: String,
     pub start_line: usize,
     pub end_line: usize,
+    #[serde(default)]
+    pub enclosing_symbol: Option<String>,
+    #[serde(default)]
+    pub callees: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Default)]

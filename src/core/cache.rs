@@ -35,7 +35,7 @@ impl Cache {
                 skeleton_text TEXT NOT NULL,
                 symbols_json TEXT NOT NULL,
                 imports_json TEXT NOT NULL DEFAULT '[]',
-                schema_version INTEGER NOT NULL DEFAULT 2
+                schema_version INTEGER NOT NULL DEFAULT 3
             )",
             [],
         )?;
@@ -46,6 +46,11 @@ impl Cache {
         );
         let _ = conn.execute(
             "ALTER TABLE file_index ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 2",
+            [],
+        );
+        // Migration: bump schema_version to 3 for v0.4.0 (new symbol fields)
+        let _ = conn.execute(
+            "ALTER TABLE file_index ADD COLUMN schema_version INTEGER NOT NULL DEFAULT 3",
             [],
         );
         Ok(Self { conn })
@@ -65,7 +70,7 @@ impl Cache {
 
     pub fn put(&self, entry: &CacheEntry) -> Result<()> {
         self.conn.execute(
-            "INSERT OR REPLACE INTO file_index (rel_path, mtime_ns, byte_len, language, skeleton_text, symbols_json, imports_json, schema_version) VALUES (?1,?2,?3,?4,?5,?6,?7,2)",
+            "INSERT OR REPLACE INTO file_index (rel_path, mtime_ns, byte_len, language, skeleton_text, symbols_json, imports_json, schema_version) VALUES (?1,?2,?3,?4,?5,?6,?7,3)",
             params![
                 entry.rel, entry.mtime_ns, entry.byte_len, entry.language,
                 entry.skeleton, entry.symbols_json, entry.imports_json
