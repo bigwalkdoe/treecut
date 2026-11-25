@@ -34,6 +34,8 @@ AI coding agents lose accuracy and burn tokens when forced to `grep` blindly or 
 * **Incremental SQLite `mtime` Cache**: Indexes unchanged files in `.treecut/cache.db` so repeated slices across large repositories run in single-digit milliseconds.
 * **12 Languages Out of the Box**: Native `tree-sitter` support for **Rust**, **Python**, **TypeScript / TSX**, **Go**, **Java**, **C / C++**, **JavaScript / JSX**, **C#**, **Ruby**, **PHP**, **Swift**, and **Bash / Shell**.
 * **Import Alias Resolution**: `slice_symbol` and `slice_changed_symbols` resolve aliased imports across files (Rust `use foo as bar`, TypeScript `import { foo as bar }`, Python `from foo import bar as baz`, Go `import bar "foo"`, C# `using Bar = Foo;`) and annotate call sites with `(via alias <name>)`.
+* **Transitive Call-Graph Traversal (`--depth`, `--direction`)**: Walk the call graph up to 4 hops away from any seed symbol. `--direction callers` (default) finds upward callers, `--direction callees` finds downstream callees, `--direction both` expands in both directions. Output is grouped by hop level: `[Hop 0]`, `[Hop 1]`, etc., with safe cycle handling for recursive functions.
+* **Monorepo Workspace Filtering (`--scope`, `--include`)**: Narrow slicing to a sub-directory (`--scope path/to/workspace`) while sharing the root `.treecut/cache.db`, and exclude patterns via glob (`--include "*_test.rs" --include "*.spec.ts"`).
 * **Multi-Symbol Batch Slicing (`slice_symbols`)**: Trace multiple functions, structs, or classes in a **single MCP tool call** or CLI invocation (`treecut slice SymbolA SymbolB SymbolC`). Automatically merges overlapping line spans when multiple target symbols share callers, eliminating duplicate context blocks.
 * **Token-Savings Telemetry (`--stats`)**: Every slice and skeleton operation calculates exact byte and estimated token savings compared to reading full matched files. Pass `--stats` to `treecut map`, `treecut slice`, or `treecut diff-slice` to print compression metrics to `stderr` without polluting `stdout` pipes.
 * **Dual-Mode Binary**: Runs as a headless `stdio` **MCP Server** inside your editor or as a standalone **Agentic CLI** in your terminal.
@@ -112,11 +114,13 @@ cargo install --path .
 
 | Tool | Purpose | Key Arguments |
 | :--- | :--- | :--- |
-| `repo_skeleton` | Compressed codebase signature map | `root`, `max_depth`, `max_chars`, `stats` |
-| `slice_symbol` | Full definition + cross-file call sites | `symbol`, `root`, `context_lines`, `max_chars`, `stats` |
-| `slice_symbols` | Batch slice multiple symbols in one call | `symbols[]`, `root`, `context_lines`, `max_chars`, `stats` |
-| `slice_changed_symbols` | Modified AST symbols in Git diff + callers | `root`, `base_ref`, `include_callers`, `max_chars`, `stats` |
+| `repo_skeleton` | Compressed codebase signature map | `root`, `max_depth`, `max_chars`, `stats`, `scope`, `include` |
+| `slice_symbol` | Full definition + cross-file call sites | `symbol`, `root`, `context_lines`, `max_chars`, `stats`, `depth`, `direction`, `scope`, `include` |
+| `slice_symbols` | Batch slice multiple symbols in one call | `symbols[]`, `root`, `context_lines`, `max_chars`, `stats`, `depth`, `direction`, `scope`, `include` |
+| `slice_changed_symbols` | Modified AST symbols in Git diff + callers | `root`, `base_ref`, `include_callers`, `max_chars`, `stats`, `depth`, `direction`, `scope`, `include` |
 | `read_node` | Line-bounded precision source reader | `path`, `start_line`, `end_line` |
+
+**New v0.4.0 arguments**: `depth` (1-4, default 1), `direction` ("callers" | "callees" | "both", default "callers"), `scope` (sub-directory filter), `include` (glob patterns to exclude).
 
 ---
 
@@ -130,9 +134,25 @@ Use `treecut` directly in terminal pipelines, Git hooks, or standalone agentic d
 # Generate a compressed repository skeleton (up to 12k chars)
 treecut map --depth 3 --max-chars 12000
 
+# Scope to a monorepo workspace (e.g., crates/auth) while sharing root cache
+treecut map --scope crates/auth
+
+# Exclude test files from skeleton/map
+treecut map --include "*_test.rs" --include "*.spec.ts"
+
 # Slice one or more symbols' definitions and all call sites across the repo
 treecut slice verify_token
 treecut slice verify_token refresh_token handle_request
+
+# Walk the call graph: find callers up to 2 hops (default direction=callers)
+treecut slice verify_token --depth 2
+treecut slice verify_token --depth 2 --direction callers
+
+# Find callees (downstream calls) up to 3 hops
+treecut slice verify_token --depth 3 --direction callees
+
+# Expand in both directions (callers + callees) up to 2 hops
+treecut slice verify_token --depth 2 --direction both
 
 # Show token-savings telemetry for any slice/map operation
 treecut slice verify_token --stats
@@ -144,6 +164,9 @@ treecut diff-slice
 
 # Compare against a base branch before opening a PR
 treecut diff-slice --base main
+
+# Diff-slice with call-graph traversal and scope filtering
+treecut diff-slice --base main --depth 2 --direction both --scope crates/auth
 ```
 
 ### Agentic Terminal Mode (`treecut ask`)
@@ -186,6 +209,53 @@ Aliased call sites are clearly annotated in slice outputs:
    4:     check_tok(token)
    5: }
 ```
+
+---
+
+## Transitive Call-Graph Traversal (v0.4.0)
+
+`treecut` v0.4.0 introduces multi-hop call-graph traversal. Starting from any seed symbol, you can walk up to **4 hops** in either direction:
+
+| Direction | Behavior | Use Case |
+| :--- | :--- | :--- |
+| `callers` (default) | Find functions that call the target | Impact analysis, "who uses this?" |
+| `callees` | Find functions the target calls | Understanding dependencies, "what does this do?" |
+| `both` | Expand in both directions | Full feature trace, architecture review |
+
+Output is grouped by hop level for readability:
+```text
+=== [Hop 0] ===
+--- src/auth.rs:1-10 (hop 0) ---
+   1: pub fn verify_token(token: &str) -> bool { ... }
+
+=== [Hop 1] ===
+--- src/middleware.rs:4-4 (hop 1) ---
+   3: pub fn handle_request(token: &str) -> bool {
+   4:     check_tok(token)      // calls verify_token via alias
+
+=== [Hop 2] ===
+--- src/server.rs:12-12 (hop 2) ---
+  11: pub fn handle_connection(req: Request) {
+  12:     handle_request(req.token)  // calls handle_request
+```
+
+Recursive functions and cycles are handled safely via a visited-set.
+
+---
+
+## Monorepo Workspace & Glob Filtering (v0.4.0)
+
+In large workspaces, restrict slicing to a single crate or package while sharing the root `.treecut/cache.db`:
+
+```bash
+# Only slice within crates/auth (relative to repo root)
+treecut slice verify_token --scope crates/auth
+
+# Exclude test files using glob patterns
+treecut slice verify_token --include "*_test.rs" --include "*.spec.ts"
+```
+
+The `--scope` path is resolved relative to `--path` (or current directory). The `--include` patterns use `globset` syntax and act as **exclude** filters (matching files are skipped).
 
 ---
 
