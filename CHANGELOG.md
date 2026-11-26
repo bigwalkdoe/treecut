@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-11-27
+
 ### Added
 - `treecut init` subcommand to bootstrap MCP config and `/slice` command files for OpenCode, Claude Code, and Cursor (`--opencode`, `--claude`, `--cursor`, `--all`).
 - Shipped `.claude/commands/slice.md` and `.cursor/commands/slice.md` alongside `.opencode/commands/slice.md`.

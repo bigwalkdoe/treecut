@@ -7,12 +7,12 @@
     "url": "https://github.com/bigwalkdoe/treecut",
     "source": "github"
   },
-  "version": "0.4.3",
+  "version": "0.4.4",
   "packages": [
     {
       "registryType": "cargo",
       "identifier": "treecut",
-      "version": "0.4.3",
+      "version": "0.4.4",
       "transport": {
         "type": "stdio"
       }
