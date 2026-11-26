@@ -36,6 +36,8 @@ cargo check --locked --no-default-features --features mcp
 - `src/core/` - pure core engine (walker, parser, slicer, skeleton, git diff, cache, models)
 - `tests/core_tests.rs` - core/integration tests
 - `tests/fixtures/` - language and behavior fixtures
+- `.opencode/commands/`, `.claude/commands/`, `.cursor/commands/` - editor slash-command templates
+- `server.json` - MCP Registry metadata
 
 ## Validation expectations
 

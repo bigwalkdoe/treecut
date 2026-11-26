@@ -1,4 +1,4 @@
-# VHS Tape Script for treecut v0.1.0
+# VHS Tape Script for treecut demo
 # Run with: vhs demo.tape
 
 Output assets/demo.gif
