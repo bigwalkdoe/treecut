@@ -39,7 +39,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to `main`:
   - `cargo test --locked`
   - `cargo check --locked --no-default-features --features mcp`
 
-Tag releases (`v*`) are intended to be handled by `cargo-dist` (configured in `Cargo.toml` `[workspace.metadata.dist]`), which generates installer scripts and platform artifacts. Homebrew publishing requires the configured tap repository to exist and a release token with write access.
+Tag releases (`v*`) are intended to be handled by `cargo-dist` (configured in `Cargo.toml` `[workspace.metadata.dist]`), which generates installer scripts and platform artifacts. Homebrew formula updates publish to [`bigwalkdoe/homebrew-tap`](https://github.com/bigwalkdoe/homebrew-tap) when the release token has write access.
 
 > Note: release notes on GitHub may also be curated manually; keep `CHANGELOG.md` as the human-maintained source of notable changes.
 

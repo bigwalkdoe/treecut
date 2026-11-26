@@ -68,7 +68,7 @@ powershell -ExecutionPolicy Bypass -c "irm https://github.com/bigwalkdoe/treecut
 brew install bigwalkdoe/tap/treecut
 ```
 
-> Homebrew publishing requires the `bigwalkdoe/homebrew-tap` repository to exist and a release token with write access. Until the tap is published, use Cargo or the shell/PowerShell installers.
+> Homebrew tap: [`bigwalkdoe/homebrew-tap`](https://github.com/bigwalkdoe/homebrew-tap). Future cargo-dist releases can publish formula updates automatically when the release token has write access to the tap repo.
 
 ### Build from Source
 
