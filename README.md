@@ -9,6 +9,8 @@
 [![Built With Rust](https://img.shields.io/badge/built_with-Rust-CE422B.svg)](https://rust-lang.org)
 [![Tree-sitter](https://img.shields.io/badge/tree--sitter-12_languages-2ea44f.svg)](https://tree-sitter.github.io)
 [![MCP Compatible](https://img.shields.io/badge/MCP-compatible-8A2BE2.svg)](https://modelcontextprotocol.io)
+[![MCP Registry](https://img.shields.io/badge/MCP_Registry-listed-4B5563.svg)](https://registry.modelcontextprotocol.io)
+[![Homebrew](https://img.shields.io/badge/Homebrew-bigwalkdoe%2Ftap-FBB040.svg)](https://github.com/bigwalkdoe/homebrew-tap)
 [![SQLite Cached](https://img.shields.io/badge/cache-SQLite_mtime-003B57.svg)](https://sqlite.org)
 
 Stop dumping 1,500-line files into your LLM's context window.<br/>
