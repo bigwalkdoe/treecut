@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-26
+
 ### Added
 - Additional validation coverage for v0.4.0 traversal/filtering, diff-slice stats, CLI smoke, and MCP initialize version reporting.
 - `CONTRIBUTING.md` and `docs/DEVELOPMENT.md` with local validation and CI guidance.
