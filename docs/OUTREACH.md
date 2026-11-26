@@ -61,6 +61,9 @@ https://crates.io/crates/treecut
 - [x] crates.io published (0.4.3)
 - [x] Homebrew tap updated (0.4.3)
 - [x] MCP Registry published (io.github.bigwalkdoe/treecut@0.4.3)
+
+## Deferred (later)
+
 - [ ] HOMEBREW_TAP_TOKEN verified on next tag (permissions fixed; rerun not done on 0.4.2 failure)
 - [ ] Glama listing
 - [ ] Smithery listing
