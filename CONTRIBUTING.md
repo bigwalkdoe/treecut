@@ -64,3 +64,12 @@ cargo check --locked --no-default-features --features mcp
 - Keep PRs focused and include tests for behavior changes.
 - Avoid unrelated refactors in bugfix/feature PRs.
 - Do not commit machine-specific local config (e.g. `opencode.json` is ignored).
+
+## Release checklist (maintainers)
+
+1. Update `CHANGELOG.md` and bump `Cargo.toml` version.
+2. Run validation: `cargo test --locked`, `cargo check --locked --no-default-features --features mcp`, and `dist plan`.
+3. Commit, tag (`vX.Y.Z`), and push commit+tag.
+4. Confirm GitHub Actions `Release` workflow (cargo-dist) succeeds and publishes artifacts/installers.
+5. Confirm crates.io publish (if part of release) and Homebrew formula update in `bigwalkdoe/homebrew-tap`.
+6. Ensure repo secret `HOMEBREW_TAP_TOKEN` exists with write access to `bigwalkdoe/homebrew-tap`.

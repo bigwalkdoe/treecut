@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CONTRIBUTING.md` and `docs/DEVELOPMENT.md` with local validation and CI guidance.
 - `cargo-dist` configuration for shell/PowerShell/Homebrew installers and cross-platform release artifacts.
 - Bootstrapped [`bigwalkdoe/homebrew-tap`](https://github.com/bigwalkdoe/homebrew-tap) with a `treecut` formula for v0.4.1.
+- Added traversal edge-case tests (cycles, depth cap, direction=both) and CI `dist plan` verification.
+- Added maintainer release checklist and Homebrew tap token documentation.
 
 ### Changed
 - MCP `initialize` now reports the package version from `Cargo.toml`.

@@ -444,3 +444,67 @@ fn mcp_initialize_reports_package_version() {
     let stdout = String::from_utf8_lossy(&out.stdout);
     assert!(stdout.contains(env!("CARGO_PKG_VERSION")));
 }
+
+#[test]
+fn slice_symbol_handles_cycles() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    std::fs::write(
+        root.join("lib.rs"),
+        "pub fn a() { b(); }\npub fn b() { a(); }\n",
+    )
+    .unwrap();
+    let args = core::SliceSymbolArgs {
+        root: Some(root.to_str().unwrap().to_string()),
+        symbol: "a".to_string(),
+        depth: Some(3),
+        direction: Some(core::TraversalDirection::Both),
+        ..Default::default()
+    };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    assert!(result.text.contains("fn a()"));
+    assert!(result.text.contains("fn b()"));
+}
+
+#[test]
+fn slice_symbol_depth_limit_is_capped() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    std::fs::write(
+        root.join("lib.rs"),
+        "pub fn a() { b(); }\npub fn b() { c(); }\npub fn c() { d(); }\npub fn d() { e(); }\npub fn e() {}\n",
+    )
+    .unwrap();
+    let args = core::SliceSymbolArgs {
+        root: Some(root.to_str().unwrap().to_string()),
+        symbol: "a".to_string(),
+        depth: Some(10),
+        direction: Some(core::TraversalDirection::Callees),
+        ..Default::default()
+    };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    assert!(result.text.contains("fn a()"));
+    assert!(result.text.contains("fn b()"));
+}
+
+#[test]
+fn slice_symbol_direction_both_includes_callers_and_callees() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    std::fs::write(
+        root.join("lib.rs"),
+        "pub fn leaf() {}\npub fn mid() { leaf(); }\npub fn top() { mid(); }\n",
+    )
+    .unwrap();
+    let args = core::SliceSymbolArgs {
+        root: Some(root.to_str().unwrap().to_string()),
+        symbol: "mid".to_string(),
+        depth: Some(1),
+        direction: Some(core::TraversalDirection::Both),
+        ..Default::default()
+    };
+    let result = core::slicer::slice_symbol(&args).unwrap();
+    assert!(result.text.contains("fn mid()"), "should include seed");
+    assert!(result.text.contains("fn top()") || result.text.contains("top()"), "should include caller");
+    assert!(result.text.contains("fn leaf()") || result.text.contains("leaf()"), "should include callee");
+}
