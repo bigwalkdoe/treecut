@@ -50,6 +50,26 @@ AI coding agents lose accuracy and burn tokens when forced to `grep` blindly or 
 cargo install treecut
 ```
 
+### Shell installer (macOS/Linux)
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/bigwalkdoe/treecut/releases/latest/download/treecut-installer.sh | sh
+```
+
+### PowerShell installer (Windows)
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/bigwalkdoe/treecut/releases/latest/download/treecut-installer.ps1 | iex"
+```
+
+### Homebrew (macOS/Linux)
+
+```bash
+brew install bigwalkdoe/tap/treecut
+```
+
+> Homebrew publishing requires the `bigwalkdoe/homebrew-tap` repository to exist and a release token with write access. Until the tap is published, use Cargo or the shell/PowerShell installers.
+
 ### Build from Source
 
 ```bash

@@ -65,3 +65,27 @@ reqwest = { version = "0.13", features = ["json"], optional = true }
 
 [dev-dependencies]
 tempfile = "3.15"
+
+# Config for 'cargo-dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.34.0"
+# CI backends to support
+ci = ["github"]
+# The installers to generate for each app
+installers = ["shell", "powershell", "homebrew"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["x86_64-unknown-linux-gnu", "x86_64-apple-darwin", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]
+# Publish jobs to run when releasing
+publish-jobs = ["homebrew"]
+# Homebrew tap repository (must exist and release token must have write access)
+tap = "bigwalkdoe/homebrew-tap"
+# Where to host releases
+hosting = ["github"]
+# Whether to install an updater program
+install-updater = false
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

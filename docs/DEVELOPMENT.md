@@ -32,14 +32,14 @@ cargo fmt --check
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to `main` and tags `v*`:
+GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to `main`:
 
 - **check** (ubuntu/macos/windows):
   - `cargo clippy --all-targets --all-features`
   - `cargo test --locked`
   - `cargo check --locked --no-default-features --features mcp`
-- **build-release** (on version tags): builds release binaries for Linux/macOS/Windows targets and uploads artifacts
-- **publish-release** (on version tags): publishes GitHub Release with generated notes and attached artifacts
+
+Tag releases (`v*`) are intended to be handled by `cargo-dist` (configured in `Cargo.toml` `[workspace.metadata.dist]`), which generates installer scripts and platform artifacts. Homebrew publishing requires the configured tap repository to exist and a release token with write access.
 
 > Note: release notes on GitHub may also be curated manually; keep `CHANGELOG.md` as the human-maintained source of notable changes.
 

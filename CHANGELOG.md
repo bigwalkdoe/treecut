@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Additional validation coverage for v0.4.0 traversal/filtering, diff-slice stats, CLI smoke, and MCP initialize version reporting.
 - `CONTRIBUTING.md` and `docs/DEVELOPMENT.md` with local validation and CI guidance.
+- `cargo-dist` configuration for shell/PowerShell/Homebrew installers and cross-platform release artifacts.
 
 ### Changed
 - MCP `initialize` now reports the package version from `Cargo.toml`.
