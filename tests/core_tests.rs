@@ -508,3 +508,23 @@ fn slice_symbol_direction_both_includes_callers_and_callees() {
     assert!(result.text.contains("fn top()") || result.text.contains("top()"), "should include caller");
     assert!(result.text.contains("fn leaf()") || result.text.contains("leaf()"), "should include callee");
 }
+
+#[test]
+fn cli_init_writes_commands_and_mcp_configs() {
+    let bin = env!("CARGO_BIN_EXE_treecut");
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+
+    let out = Command::new(bin)
+        .args(["init", "--all", "--path", root.to_str().unwrap()])
+        .output()
+        .unwrap();
+    assert!(out.status.success(), "init failed: {}", String::from_utf8_lossy(&out.stderr));
+
+    assert!(root.join(".opencode/commands/slice.md").exists());
+    assert!(root.join(".claude/commands/slice.md").exists());
+    assert!(root.join(".cursor/commands/slice.md").exists());
+    assert!(root.join("opencode.json").exists());
+    assert!(root.join(".mcp.json").exists());
+    assert!(root.join(".cursor/mcp.json").exists());
+}

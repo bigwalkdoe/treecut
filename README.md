@@ -93,6 +93,15 @@ cargo install --path .
 
 `treecut mcp` communicates over standard `stdio` JSON-RPC 2.0 with zero background daemons or API keys required.
 
+### Quick Setup (`treecut init`)
+
+```bash
+treecut init --opencode   # writes opencode.json + .opencode/commands/slice.md
+treecut init --claude     # writes .mcp.json + .claude/commands/slice.md
+treecut init --cursor     # writes .cursor/mcp.json + .cursor/commands/slice.md
+treecut init --all        # sets up all three
+```
+
 ### OpenCode (`opencode.json`)
 
 ```json
