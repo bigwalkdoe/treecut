@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Additional validation coverage for v0.4.0 traversal/filtering, diff-slice stats, CLI smoke, and MCP initialize version reporting.
+- `CONTRIBUTING.md` and `docs/DEVELOPMENT.md` with local validation and CI guidance.
+
+### Changed
+- MCP `initialize` now reports the package version from `Cargo.toml`.
+- MCP `tools/list` now includes detailed input schemas and descriptions.
+
 ## [0.4.1] - 2026-11-25
 
 ### Changed

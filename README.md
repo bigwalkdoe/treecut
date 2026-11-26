@@ -292,9 +292,14 @@ The `--scope` path is resolved relative to `--path` (or current directory). The 
 
 Contributions are welcome—especially new `tree-sitter` language queries, benchmark suites, and edge-case fixtures.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, validation expectations, and PR guidance. For CI and local validation details, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
 ```bash
-# Run the full test suite (AST parsers, SQLite cache invalidation, git2 diffs, & MCP stdio handshake)
-cargo test
+# Core validation
+cargo test --locked
+cargo check --locked --no-default-features --features mcp
+cargo clippy --all-targets --all-features
+cargo fmt --check
 ```
 
 ## License

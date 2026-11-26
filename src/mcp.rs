@@ -23,14 +23,14 @@ pub async fn run() {
             continue;
         }
         let resp = if method == "initialize" {
-            json!({"jsonrpc":"2.0","id":id,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"treecut","version":"0.3.0"}}})
+            json!({"jsonrpc":"2.0","id":id,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"treecut","version":env!("CARGO_PKG_VERSION")}}})
         } else if method == "tools/list" {
             json!({"jsonrpc":"2.0","id":id,"result":{"tools":[
-                {"name":"repo_skeleton","description":"repo skeleton","inputSchema":{"type":"object"}},
-                {"name":"slice_symbol","description":"slice symbol","inputSchema":{"type":"object"}},
-                {"name":"slice_symbols","description":"slice multiple symbols in batch","inputSchema":{"type":"object"}},
-                {"name":"slice_changed_symbols","description":"slice changed","inputSchema":{"type":"object"}},
-                {"name":"read_node","description":"read node","inputSchema":{"type":"object"}}
+                {"name":"repo_skeleton","description":"Generate a compressed repository skeleton with function bodies stripped out.","inputSchema":{"type":"object","properties":{"root":{"type":"string","description":"Repository root (defaults to cwd)"},"max_depth":{"type":"integer","description":"Max directory depth"},"max_chars":{"type":"integer","description":"Max output characters"},"no_cache":{"type":"boolean","description":"Disable SQLite mtime cache"},"stats":{"type":"boolean","description":"Include token-savings stats"},"scope":{"type":"string","description":"Sub-directory scope relative to root"},"include":{"type":"array","items":{"type":"string"},"description":"Glob patterns to exclude"}}}},
+                {"name":"slice_symbol","description":"Extract a symbol definition and cross-file call sites/call graph context.","inputSchema":{"type":"object","required":["symbol"],"properties":{"symbol":{"type":"string","description":"Symbol name to slice"},"root":{"type":"string"},"context_lines":{"type":"integer"},"max_chars":{"type":"integer"},"stats":{"type":"boolean"},"depth":{"type":"integer","description":"Traversal depth 1-4"},"direction":{"type":"string","enum":["callers","callees","both"]},"scope":{"type":"string"},"include":{"type":"array","items":{"type":"string"}}}}},
+                {"name":"slice_symbols","description":"Slice multiple symbols in one call with deduplicated overlapping context.","inputSchema":{"type":"object","required":["symbols"],"properties":{"symbols":{"type":"array","items":{"type":"string"}},"root":{"type":"string"},"context_lines":{"type":"integer"},"max_chars":{"type":"integer"},"stats":{"type":"boolean"},"depth":{"type":"integer"},"direction":{"type":"string","enum":["callers","callees","both"]},"scope":{"type":"string"},"include":{"type":"array","items":{"type":"string"}}}}},
+                {"name":"slice_changed_symbols","description":"Slice symbols changed in git diff and optionally include callers.","inputSchema":{"type":"object","properties":{"root":{"type":"string"},"base_ref":{"type":"string","description":"Git base ref to diff against"},"include_callers":{"type":"boolean"},"max_chars":{"type":"integer"},"stats":{"type":"boolean"},"depth":{"type":"integer"},"direction":{"type":"string","enum":["callers","callees","both"]},"scope":{"type":"string"},"include":{"type":"array","items":{"type":"string"}}}}},
+                {"name":"read_node","description":"Read a precise line range from a file.","inputSchema":{"type":"object","required":["path","start_line","end_line"],"properties":{"path":{"type":"string"},"start_line":{"type":"integer"},"end_line":{"type":"integer"}}}}
             ]}})
         } else if method == "tools/call" {
             let tool_name = req.get("params").and_then(|p| p.get("name")).and_then(|n| n.as_str()).unwrap_or("");
