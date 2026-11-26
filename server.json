@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.bigwalkdoe/treecut",
+  "title": "treecut",
+  "description": "AST and call-graph context slicer for AI coding agents via MCP stdio.",
+  "repository": {
+    "url": "https://github.com/bigwalkdoe/treecut",
+    "source": "github"
+  },
+  "version": "0.4.3",
+  "packages": [
+    {
+      "registryType": "cargo",
+      "identifier": "treecut",
+      "version": "0.4.3",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

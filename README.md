@@ -16,6 +16,8 @@ Stop dumping 1,500-line files into your LLM's context window.<br/>
 
 [Quickstart](#quickstart) • [MCP Setup](#mcp-server-setup) • [CLI Usage](#cli-usage) • [Architecture](#architecture)
 
+MCP Registry: `mcp-name: io.github.bigwalkdoe/treecut`
+
 </div>
 
 <div align="center">

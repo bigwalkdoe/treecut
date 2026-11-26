@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-26
+
+### Added
+- MCP Registry metadata (`server.json`) and `mcp-name` ownership marker in README for registry publishing.
+
 ## [0.4.2] - 2026-11-26
 
 ### Added
